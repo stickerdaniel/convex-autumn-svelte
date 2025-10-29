@@ -25,6 +25,12 @@
 		"url": "https://github.com/stickerdaniel/convex-autumn-svelte/issues"
 	},
 	"type": "module",
+	"engines": {
+		"node": ">=18.0.0"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
 	"files": [
 		"dist/svelte",
 		"dist/sveltekit",

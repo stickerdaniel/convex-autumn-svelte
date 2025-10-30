@@ -12,7 +12,7 @@ import {
 } from "./client.svelte.js";
 
 import type { AutumnConvexApi, Customer } from "../svelte/types.js";
-import type { AutumnServerState } from "./client.svelte.js";
+import type { AutumnServerState, InvalidateFunction } from "./client.svelte.js";
 
 /**
  * Initialize Autumn for SvelteKit with SSR support.
@@ -22,22 +22,25 @@ import type { AutumnServerState } from "./client.svelte.js";
  *
  * @param convexApi - The Autumn API from your Convex backend (e.g., api.autumn)
  * @param getServerState - Optional function to get server-side customer data for SSR
+ * @param invalidate - Optional SvelteKit invalidate function for automatic data refetching
  * @returns The Autumn client instance that can be used to access billing methods
  *
  * @example
  * ```svelte
  * <!-- +layout.svelte -->
  * <script lang="ts">
- *   import { setupAutumn } from '@stickerdaniel/convex-autumn-svelte/autumn/sveltekit';
+ *   import { setupAutumn } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
+ *   import { invalidate } from '$app/navigation';
  *   import { api } from '$lib/convex/_generated/api';
  *   import type { LayoutData } from './$types';
  *
  *   let { data }: { data: LayoutData } = $props();
  *
- *   // Set up Autumn with SSR support
+ *   // Set up Autumn with SSR support and auto-invalidation
  *   setupAutumn({
  *     convexApi: api.autumn,
- *     getServerState: () => data.autumnState
+ *     getServerState: () => data.autumnState,
+ *     invalidate  // Pass SvelteKit's invalidate function
  *   });
  * </script>
  *
@@ -47,7 +50,7 @@ import type { AutumnServerState } from "./client.svelte.js";
  * In your +layout.server.ts:
  * ```typescript
  * import type { LayoutServerLoad } from './$types';
- * import { createAutumnHandlers } from '@stickerdaniel/convex-autumn-svelte/autumn/sveltekit/server';
+ * import { createAutumnHandlers } from '@stickerdaniel/convex-autumn-svelte/sveltekit/server';
  *
  * export const load: LayoutServerLoad = async (event) => {
  *   const { getCustomer } = createAutumnHandlers();
@@ -65,13 +68,16 @@ import type { AutumnServerState } from "./client.svelte.js";
 export function setupAutumn({
 	convexApi,
 	getServerState,
+	invalidate,
 }: {
 	/** Autumn Convex API object (e.g., api.autumn from generated types) */
 	convexApi: AutumnConvexApi;
 	/** Optional function to get server state for SSR hydration */
 	getServerState?: () => AutumnServerState;
+	/** Optional SvelteKit invalidate function for automatic data refetching */
+	invalidate?: InvalidateFunction;
 }) {
-	const autumn = createAutumnClientSvelteKit({ convexApi, getServerState });
+	const autumn = createAutumnClientSvelteKit({ convexApi, getServerState, invalidate });
 	setAutumnContext(autumn);
 
 	return autumn;
@@ -284,4 +290,4 @@ export type {
 	AutumnConvexApi,
 } from "../svelte/types.js";
 
-export type { AutumnServerState } from "./client.svelte.js";
+export type { AutumnServerState, InvalidateFunction } from "./client.svelte.js";

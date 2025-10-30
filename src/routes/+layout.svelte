@@ -2,6 +2,7 @@
 	import { setupConvex } from 'convex-svelte';
 	import { setupConvexAuth } from '@mmailaender/convex-auth-svelte/sveltekit';
 	import { setupAutumn } from '$lib/sveltekit';
+	import { invalidate } from '$app/navigation';
 	import { api } from '$lib/convex/_generated/api';
 	import { PUBLIC_CONVEX_URL } from '$env/static/public';
 	import '../app.css';
@@ -20,7 +21,8 @@
 	// Initialize Autumn billing after Convex client is available in context.
 	setupAutumn({
 		convexApi: api.autumn,
-		getServerState: () => data.autumnState
+		getServerState: () => data.autumnState,
+		invalidate
 	});
 </script>
 

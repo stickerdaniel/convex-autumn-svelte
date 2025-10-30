@@ -131,15 +131,16 @@ export const load: LayoutServerLoad = async (event) => {
 
 > **Note:** While this example uses Convex Auth, Autumn works with any auth solution (BetterAuth, custom, ...) by providing a client factory function. See the [createAutumnHandlers JSDoc](./server/index.ts) for examples with other auth solutions.
 
-### 3. Client-Side Setup with SSR
+### 3. Client-Side Setup with SSR and Auto-Invalidation
 
-Initialize Autumn in your layout component with server state:
+Initialize Autumn in your layout component with server state and pass the `invalidate` function for automatic data refetching:
 
 ```svelte
 <!-- src/routes/+layout.svelte -->
 <script lang="ts">
   import { setupConvex } from 'convex-svelte';
   import { setupAutumn } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
+  import { invalidate } from '$app/navigation';
   import { api } from '$lib/convex/_generated/api';
   import { PUBLIC_CONVEX_URL } from '$env/static/public';
   import type { LayoutData } from './$types';
@@ -149,15 +150,18 @@ Initialize Autumn in your layout component with server state:
   // Setup Convex client
   setupConvex(PUBLIC_CONVEX_URL);
 
-  // Setup Autumn with SSR support
+  // Setup Autumn with SSR support and auto-invalidation
   setupAutumn({
     convexApi: api.autumn,
-    getServerState: () => data.autumnState
+    getServerState: () => data.autumnState,
+    invalidate  // Pass SvelteKit's invalidate function for auto-refetch
   });
 </script>
 
 {@render children()}
 ```
+
+> **Note:** Passing the `invalidate` function enables automatic data refetching after mutations. If you don't pass it, mutations will still work but won't automatically refresh customer data. You'll need to manually call `refetch()` or reload the page to see updated data.
 
 ## Usage
 
@@ -350,7 +354,7 @@ export const load: PageServerLoad = async (event) => {
 
 ## Automatic Data Refresh
 
-All mutation methods (`check`, `checkout`, `track`, `attach`, `cancel`, `createEntity`) automatically call `invalidate('autumn:customer')` after completion to refresh your customer data. This ensures your UI stays in sync:
+All mutation methods (`check`, `checkout`, `track`, `attach`, `cancel`, `createEntity`) automatically call `invalidate('autumn:customer')` after completion to refresh your customer data **when the `invalidate` function is passed to `setupAutumn()`**. This ensures your UI stays in sync:
 
 ```svelte
 <script lang="ts">
@@ -519,10 +523,12 @@ Minimal changes required:
 ```diff
 - import { setupAutumn, useCustomer } from '@stickerdaniel/convex-autumn-svelte/svelte';
 + import { setupAutumn, useCustomer } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
++ import { invalidate } from '$app/navigation';
 
   setupAutumn({
     convexApi: api.autumn,
-+   getServerState: () => data.autumnState
++   getServerState: () => data.autumnState,
++   invalidate  // Enable automatic data refetching
   });
 ```
 

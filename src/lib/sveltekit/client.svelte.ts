@@ -5,7 +5,6 @@
  */
 
 import { getContext, setContext } from "svelte";
-import { invalidate } from "$app/navigation";
 import { useConvexClient } from "convex-svelte";
 
 import type {
@@ -51,19 +50,29 @@ export interface AutumnServerState {
 }
 
 /**
+ * SvelteKit's invalidate function type.
+ *
+ * Import from '$app/navigation' in your consuming application and pass it to the client.
+ */
+export type InvalidateFunction = (url: string | URL) => Promise<void>;
+
+/**
  * Create an Autumn client for SvelteKit with SSR support.
  *
  * @param params - Configuration options
  * @param params.convexApi - The Autumn Convex API object
  * @param params.getServerState - Optional function to retrieve server state
+ * @param params.invalidate - Optional SvelteKit invalidate function for data refetching
  * @returns The Autumn client API with reactive state and methods
  */
 export function createAutumnClientSvelteKit({
 	convexApi,
 	getServerState,
+	invalidate,
 }: {
 	convexApi: AutumnConvexApi;
 	getServerState?: () => AutumnServerState;
+	invalidate?: InvalidateFunction;
 }) {
 	const client = useConvexClient();
 
@@ -129,7 +138,7 @@ export function createAutumnClientSvelteKit({
 		const result = await client.action(convexApi.check, params);
 		const response = unwrapAutumnResponse<CheckResult>(result);
 
-		if (refetch) {
+		if (refetch && invalidate) {
 			await invalidate('autumn:customer');
 		}
 
@@ -158,7 +167,7 @@ export function createAutumnClientSvelteKit({
 			}
 		}
 
-		if (refetch) {
+		if (refetch && invalidate) {
 			await invalidate('autumn:customer');
 		}
 
@@ -181,7 +190,7 @@ export function createAutumnClientSvelteKit({
 		const result = await client.action(convexApi.track, params);
 		const data = unwrapAutumnResponse<TrackResult>(result);
 
-		if (refetch) {
+		if (refetch && invalidate) {
 			await invalidate('autumn:customer');
 		}
 
@@ -203,7 +212,7 @@ export function createAutumnClientSvelteKit({
 		const result = await client.action(convexApi.attach, params);
 		unwrapAutumnResponse<void>(result);
 
-		if (refetch) {
+		if (refetch && invalidate) {
 			await invalidate('autumn:customer');
 		}
 	};
@@ -223,7 +232,7 @@ export function createAutumnClientSvelteKit({
 		const result = await client.action(convexApi.cancel, params);
 		unwrapAutumnResponse<void>(result);
 
-		if (refetch) {
+		if (refetch && invalidate) {
 			await invalidate('autumn:customer');
 		}
 	};
@@ -263,7 +272,7 @@ export function createAutumnClientSvelteKit({
 		const result = await client.action(convexApi.createEntity, params);
 		const entity = unwrapAutumnResponse<Entity>(result);
 
-		if (refetch) {
+		if (refetch && invalidate) {
 			await invalidate('autumn:customer');
 		}
 
@@ -301,7 +310,7 @@ export function createAutumnClientSvelteKit({
 			window.location.href = data.url;
 		}
 
-		if (refetch) {
+		if (refetch && invalidate) {
 			await invalidate('autumn:customer');
 		}
 
@@ -324,7 +333,7 @@ export function createAutumnClientSvelteKit({
 		const result = await client.action(convexApi.createReferralCode, params);
 		const data = unwrapAutumnResponse<CreateReferralCodeResult>(result);
 
-		if (refetch) {
+		if (refetch && invalidate) {
 			await invalidate('autumn:customer');
 		}
 
@@ -347,7 +356,7 @@ export function createAutumnClientSvelteKit({
 		const result = await client.action(convexApi.redeemReferralCode, params);
 		const data = unwrapAutumnResponse<RedeemReferralCodeResult>(result);
 
-		if (refetch) {
+		if (refetch && invalidate) {
 			await invalidate('autumn:customer');
 		}
 
@@ -393,9 +402,12 @@ export function createAutumnClientSvelteKit({
 	 * Manually refetch customer data.
 	 *
 	 * Uses SvelteKit's targeted invalidation for efficient refresh.
+	 * Only works if invalidate function was provided during client creation.
 	 */
 	const refetch = async (): Promise<void> => {
-		await invalidate('autumn:customer');
+		if (invalidate) {
+			await invalidate('autumn:customer');
+		}
 	};
 
 	const autumnApi = {

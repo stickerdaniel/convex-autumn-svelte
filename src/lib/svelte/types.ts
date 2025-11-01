@@ -34,7 +34,7 @@ export interface Product {
  */
 export interface ProductItem {
 	feature_id?: string;
-	included_usage?: number;
+	included_usage?: number | string;
 	price?: number;
 	interval?: "month" | "year" | "one_time";
 }
@@ -59,7 +59,7 @@ export interface Customer {
 	name?: string;
 	email?: string;
 	products?: Product[];
-	features?: Record<string, Feature>;
+	features?: Record<string, FeatureUsageData>;
 	entities?: Entity[];
 	stripe_customer_id?: string;
 	created_at?: number;
@@ -242,7 +242,7 @@ export interface FeatureUsageData {
 	name: string;
 	type: 'continuous_use' | 'single_use';
 	balance?: number;
-	included_usage?: number;
+	included_usage?: number | string;
 	usage?: number;
 	interval?: 'month' | 'year' | 'one_time';
 	interval_count?: number;

@@ -1,7 +1,7 @@
 {
 	"name": "@stickerdaniel/convex-autumn-svelte",
 	"author": "Daniel Sticker",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Svelte 5 wrapper for Convex Autumn billing - reactive, type-safe, SSR-ready",
 	"license": "MIT",
 	"keywords": [
@@ -54,8 +54,8 @@
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"package": "svelte-kit sync && svelte-package && publint",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"check": "svelte-kit sync && svelte-check --no-tsconfig --ignore \"src/lib/convex,dist\"",
+		"check:watch": "svelte-kit sync && svelte-check --no-tsconfig --ignore \"src/lib/convex,dist\" --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check .",
 		"test:e2e": "playwright test",

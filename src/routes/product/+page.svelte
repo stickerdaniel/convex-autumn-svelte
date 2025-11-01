@@ -19,7 +19,7 @@
 	const isPro = $derived(autumn.customer?.products?.some((p) => p.id === 'pro') ?? false);
 	const isUnlimited = $derived(messagesFeature?.unlimited ?? false);
 	const messagesUsed = $derived(messagesFeature?.usage ?? 0);
-	const messagesTotal = $derived(messagesFeature?.included_usage ?? 0);
+	const messagesTotal = $derived(typeof messagesFeature?.included_usage === 'number' ? messagesFeature.included_usage : 0);
 	const messagesRemaining = $derived(messagesFeature?.balance ?? 0);
 
 	const isNearingLimit = $derived(

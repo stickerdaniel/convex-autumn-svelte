@@ -38,7 +38,7 @@
 	const messagesFeature = $derived(autumn.customer?.features?.messages);
 	const isUnlimited = $derived(messagesFeature?.unlimited ?? false);
 	const messagesUsed = $derived(messagesFeature?.usage ?? 0);
-	const messagesTotal = $derived(messagesFeature?.included_usage ?? 0);
+	const messagesTotal = $derived(typeof messagesFeature?.included_usage === 'number' ? messagesFeature.included_usage : 0);
 	const messagesRemaining = $derived(messagesFeature?.balance ?? 0);
 
 	let setUsageValue = $state('');

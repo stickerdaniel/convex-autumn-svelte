@@ -178,6 +178,14 @@ export function createAutumnHandlers({
 
 			return customer;
 		} catch (error) {
+			// Silently return null for unauthenticated users (expected behavior).
+			// This occurs when getCustomer is called without a valid auth session.
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			if (errorMessage.includes("No customer identifier found")) {
+				return null;
+			}
+
+			// Log unexpected errors for debugging.
 			console.error("Error fetching customer data:", error);
 			return null;
 		}

@@ -117,7 +117,7 @@
 		"svelte": "^5.38.5"
 	},
 	"dependencies": {
-		"@useautumn/convex": "^0.0.12",
+		"@useautumn/convex": "^0.0.23",
 		"atmn": "^0.0.27",
 		"autumn-js": "^0.1.40",
 		"cookie": "^1.0.2",

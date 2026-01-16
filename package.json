@@ -93,7 +93,7 @@
 		"@tailwindcss/vite": "^4.1.12",
 		"@testing-library/jest-dom": "^6.8.0",
 		"@testing-library/svelte": "^5.2.8",
-		"@types/node": "^24.3.0",
+		"@types/node": "^25.0.0",
 		"concurrently": "^9.2.1",
 		"convex": "^1.26.1",
 		"convex-svelte": "^0.0.11",

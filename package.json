@@ -118,7 +118,7 @@
 	},
 	"dependencies": {
 		"@useautumn/convex": "^0.0.23",
-		"atmn": "^0.0.27",
+		"atmn": "^0.0.30",
 		"autumn-js": "^0.1.40",
 		"cookie": "^1.0.2",
 		"is-network-error": "^1.1.0",

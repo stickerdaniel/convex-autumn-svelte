@@ -48,7 +48,7 @@
       "peerDependencies": {
         "@sveltejs/kit": "^2.21.0",
         "convex": "^1.24.3",
-        "convex-svelte": "^0.0.11",
+        "convex-svelte": "^0.0.11 || ^0.0.12",
         "svelte": "^5.38.5",
       },
     },

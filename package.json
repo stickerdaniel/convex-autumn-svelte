@@ -83,7 +83,7 @@
 		"@mmailaender/convex-auth-svelte": "^0.1.2",
 		"@playwright/test": "^1.55.0",
 		"@skeletonlabs/skeleton": "^4.0.0",
-		"@skeletonlabs/skeleton-svelte": "^1.5.1",
+		"@skeletonlabs/skeleton-svelte": "^4.0.0",
 		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/kit": "^2.36.3",
 		"@sveltejs/package": "^2.5.0",

@@ -79,7 +79,7 @@
 		}
 	},
 	"devDependencies": {
-		"@convex-dev/auth": "^0.0.90",
+		"@convex-dev/auth": "^0.0.91",
 		"@mmailaender/convex-auth-svelte": "^0.1.2",
 		"@playwright/test": "^1.55.0",
 		"@skeletonlabs/skeleton": "^4.0.0",

@@ -648,11 +648,20 @@ Hook to access customer data and billing operations.
 - `cancel(params, options?): Promise<void>` - Cancel product subscription (auto-refetches customer)
 - `openBillingPortal(params): Promise<BillingPortalResult>` - Open Stripe portal
 - `createEntity(params, options?): Promise<Entity>` - Create new entity (auto-refetches customer)
+- `getEntity(params): Promise<Entity>` - Fetch an entity by ID
+- `setupPayment(params, options?): Promise<SetupPaymentResult>` - Setup payment method (auto-refetches customer)
+- `createReferralCode(params, options?): Promise<CreateReferralCodeResult>` - Create referral code (auto-refetches customer)
+- `redeemReferralCode(params, options?): Promise<RedeemReferralCodeResult>` - Redeem referral code (auto-refetches customer)
+- `listProducts(): Promise<Product[]>` - List all available products
+- `usage(params): Promise<SetUsageResult>` - Set usage to an absolute value
+- `query(params): Promise<QueryResult>` - Query customer data
+- `listEvents(params): Promise<EventListResult>` - List raw Autumn events
+- `aggregateEvents(params): Promise<QueryResult>` - Aggregate Autumn events
 - `refetch(): Promise<void>` - Manually refresh customer data
 
 **Important Notes:**
 
-All mutation methods (`check`, `checkout`, `track`, `attach`, `cancel`, `createEntity`) accept an optional second parameter `options` with a `refetch` boolean (default: `true`). Pass `{ refetch: false }` to disable automatic refetching for performance optimization in batch operations.
+All mutation methods (`check`, `checkout`, `track`, `attach`, `cancel`, `createEntity`, `setupPayment`, `createReferralCode`, `redeemReferralCode`) accept an optional second parameter `options` with a `refetch` boolean (default: `true`). Pass `{ refetch: false }` to disable automatic refetching for performance optimization in batch operations.
 
 **Server-Side Pattern:**
 
@@ -668,4 +677,3 @@ await autumn.refetch(); // Must call manually
 ```
 
 </details>
-

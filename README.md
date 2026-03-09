@@ -1,5 +1,10 @@
 # Convex Autumn Svelte
 
+<p align="left">
+  <a href="https://github.com/stickerdaniel/convex-autumn-svelte/actions/workflows/ci.yml" target="_blank"><img src="https://github.com/stickerdaniel/convex-autumn-svelte/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI Status"></a>
+  <a href="https://github.com/stickerdaniel/convex-autumn-svelte/blob/main/LICENSE" target="_blank"><img src="https://img.shields.io/badge/License-MIT-brightgreen?labelColor=32383f" alt="License"></a>
+</p>
+
 **Reactive Svelte 5 bindings for [Autumn billing](https://useautumn.com) with [Convex](https://convex.dev)** - Make subscription billing and feature access control effortless in your Svelte applications.
 
 ## Features

@@ -151,8 +151,8 @@ export interface BillingPortalResult {
  */
 export interface CreateEntityParams {
 	id: string;
-	name: string;
-	featureId?: string;
+	name?: string;
+	featureId: string;
 	[key: string]: unknown;
 }
 
@@ -268,6 +268,60 @@ export interface QueryResult {
 }
 
 /**
+ * Event record returned from Autumn analytics endpoints.
+ */
+export interface EventRecord {
+	id: string;
+	timestamp: number;
+	feature_id: string;
+	customer_id: string;
+	value: number;
+	properties: Record<string, unknown>;
+}
+
+/**
+ * Parameters for listing raw usage events.
+ */
+export interface EventListParams {
+	customerId?: string;
+	featureId: string | string[];
+	offset?: number;
+	limit?: number;
+	customRange?: {
+		start?: number;
+		end?: number;
+	};
+	[key: string]: unknown;
+}
+
+/**
+ * Result of listing raw usage events.
+ */
+export interface EventListResult {
+	list: EventRecord[];
+	has_more: boolean;
+	offset: number;
+	limit: number;
+	total: number;
+}
+
+/**
+ * Parameters for aggregating usage events.
+ */
+export interface EventAggregateParams {
+	customerId?: string;
+	featureId: string | string[];
+	range?: "24h" | "7d" | "30d" | "90d" | "last_cycle" | "1bc" | "3bc";
+	customRange?: {
+		start: number;
+		end: number;
+	};
+	groupBy?: string;
+	binSize?: "day" | "hour";
+	[key: string]: unknown;
+}
+
+/**
  * Parameters for creating or getting a customer.
  */
 export interface CreateCustomerParams {
@@ -303,6 +357,8 @@ export interface AutumnConvexApi {
 	listProducts: FunctionReference<any, "public">;
 	usage: FunctionReference<any, "public">;
 	query: FunctionReference<any, "public">;
+	listEvents: FunctionReference<any, "public">;
+	aggregateEvents: FunctionReference<any, "public">;
 	[key: string]: FunctionReference<any, "public">;
 }
 

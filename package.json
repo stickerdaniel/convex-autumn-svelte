@@ -59,8 +59,10 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check .",
 		"test:e2e": "playwright test",
-		"test": "bun run test:e2e && bun run test:unit -- --run",
-		"test:unit": "vitest"
+		"test:e2e:smoke": "playwright test --grep @smoke",
+		"test": "bun run test:contracts && bun run test:unit",
+		"test:contracts": "vitest run tests/contracts",
+		"test:unit": "vitest run tests/unit"
 	},
 	"exports": {
 		"./svelte": {
@@ -119,7 +121,7 @@
 	"dependencies": {
 		"@useautumn/convex": "^0.0.23",
 		"atmn": "^0.0.36",
-		"autumn-js": "^0.1.40",
+		"autumn-js": "^0.1.82",
 		"cookie": "^1.0.2",
 		"is-network-error": "^1.1.0",
 		"jwt-decode": "^4.0.0",

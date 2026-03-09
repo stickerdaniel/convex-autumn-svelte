@@ -58,4 +58,6 @@ export const {
 	redeemReferralCode,
 	createEntity,
 	getEntity,
+	listEvents,
+	aggregateEvents,
 } = autumn.api();

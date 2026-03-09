@@ -829,6 +829,8 @@ Hook to access customer data and billing operations.
 - `listProducts(): Promise<Product[]>` - List all available products
 - `usage(params): Promise<SetUsageResult>` - Set usage to absolute value
 - `query(params): Promise<QueryResult>` - Query customer data
+- `listEvents(params): Promise<EventListResult>` - List raw Autumn events
+- `aggregateEvents(params): Promise<QueryResult>` - Aggregate Autumn events
 - `refetch(): Promise<void>` - Manually trigger invalidation
 
 **Note:** Unlike the vanilla Svelte client, SvelteKit's `useCustomer()` does **not** return `isLoading` or `error` states. See [No Global Loading State](#no-global-loading-state) for details.
@@ -971,7 +973,7 @@ Create a new entity for multi-tenant billing.
 params: {
   id: string;                 // Entity ID
   name?: string;              // Entity name
-  metadata?: Record<string, any>;  // Optional metadata
+  featureId: string;          // Feature the entity belongs to
 }
 
 options: {
@@ -1085,11 +1087,56 @@ Query customer data with custom parameters.
 
 ```typescript
 params: {
-  expand?: Record<string, boolean>;  // Fields to expand
-  entityId?: string;                 // Optional entity ID
+  featureId: string | string[];      // Feature ID or IDs to query
+  range?: "24h" | "7d" | "30d" | "90d" | "last_cycle";
 }
 
 returns: QueryResult          // Custom query result
+```
+
+**`listEvents(params: EventListParams): Promise<EventListResult>`**
+
+List raw Autumn events without invalidating customer state.
+
+```typescript
+params: {
+  featureId: string | string[];      // Feature ID or IDs to query
+  customerId?: string;               // Optional explicit customer override
+  offset?: number;                   // Pagination offset
+  limit?: number;                    // Pagination limit
+  customRange?: {
+    start?: number;
+    end?: number;
+  };
+}
+
+returns: {
+  list: EventRecord[];               // Matching raw events
+  has_more: boolean;
+  offset: number;
+  limit: number;
+  total: number;
+}
+```
+
+**`aggregateEvents(params: EventAggregateParams): Promise<QueryResult>`**
+
+Aggregate Autumn events without invalidating customer state.
+
+```typescript
+params: {
+  featureId: string | string[];      // Feature ID or IDs to aggregate
+  customerId?: string;               // Optional explicit customer override
+  range?: "24h" | "7d" | "30d" | "90d" | "last_cycle" | "1bc" | "3bc";
+  customRange?: {
+    start: number;
+    end: number;
+  };
+  groupBy?: string;                  // Optional grouping key
+  binSize?: "day" | "hour";          // Optional histogram bin size
+}
+
+returns: QueryResult                 // Aggregate analytics payload
 ```
 
 **`refetch(): Promise<void>`**

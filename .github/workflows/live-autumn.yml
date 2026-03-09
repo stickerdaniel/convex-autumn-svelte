@@ -1,0 +1,50 @@
+name: Live Autumn
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * *"
+  pull_request:
+    paths:
+      - "package.json"
+      - "bun.lock"
+      - ".github/workflows/live-autumn.yml"
+
+jobs:
+  live-e2e:
+    runs-on: ubuntu-latest
+    env:
+      ENABLE_E2E_HARNESS: "1"
+      PUBLIC_E2E_TEST: "1"
+      PUBLIC_CONVEX_URL: ${{ secrets.PUBLIC_CONVEX_URL }}
+      AUTH_E2E_TEST_SECRET_PRIMARY: ${{ secrets.AUTH_E2E_TEST_SECRET_PRIMARY }}
+      AUTH_E2E_TEST_SECRET_SECONDARY: ${{ secrets.AUTH_E2E_TEST_SECRET_SECONDARY }}
+      AUTUMN_SECRET_KEY: ${{ secrets.AUTUMN_SECRET_KEY }}
+      AUTUMN_REFERRAL_PROGRAM_ID: ${{ vars.AUTUMN_REFERRAL_PROGRAM_ID || 'default' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+
+      - name: Bootstrap E2E users
+        run: bunx convex run tests:init
+
+      - name: Run live regression suite
+        run: bun run test:e2e
+
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-live-artifacts
+          path: |
+            playwright-report
+            test-results

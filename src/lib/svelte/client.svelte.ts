@@ -35,6 +35,9 @@ import type {
 	SetUsageResult,
 	QueryParams,
 	QueryResult,
+	EventListParams,
+	EventListResult,
+	EventAggregateParams,
 	LocalCheckResult,
 	RefetchOptions,
 } from "./types.js";
@@ -406,6 +409,30 @@ export function createAutumnClient({
 		return unwrapAutumnResponse<QueryResult>(result);
 	};
 
+	/**
+	 * Lists raw Autumn events without refetching customer state.
+	 *
+	 * @param params - Event query parameters
+	 * @returns Promise resolving to the paginated event list
+	 */
+	const listEvents = async (params: EventListParams): Promise<EventListResult> => {
+		const result = await client.action(convexApi.listEvents, params);
+		return unwrapAutumnResponse<EventListResult>(result);
+	};
+
+	/**
+	 * Aggregates Autumn events without refetching customer state.
+	 *
+	 * @param params - Event aggregation parameters
+	 * @returns Promise resolving to aggregate analytics data
+	 */
+	const aggregateEvents = async (
+		params: EventAggregateParams,
+	): Promise<QueryResult> => {
+		const result = await client.action(convexApi.aggregateEvents, params);
+		return unwrapAutumnResponse<QueryResult>(result);
+	};
+
 	const autumnApi = {
 		get customer(): Customer | null | undefined {
 			return customerState.data;
@@ -433,6 +460,8 @@ export function createAutumnClient({
 		listProducts,
 		usage,
 		query,
+		listEvents,
+		aggregateEvents,
 
 		refetch: fetchCustomer,
 	};

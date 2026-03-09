@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      LIVE_AUTUMN_SMOKE: ${{ vars.LIVE_AUTUMN_SMOKE || '0' }}
+      ENABLE_E2E_HARNESS: "1"
+      PUBLIC_E2E_TEST: "1"
+      PUBLIC_CONVEX_URL: ${{ secrets.PUBLIC_CONVEX_URL }}
+      AUTH_E2E_TEST_SECRET_PRIMARY: ${{ secrets.AUTH_E2E_TEST_SECRET_PRIMARY }}
+      AUTH_E2E_TEST_SECRET_SECONDARY: ${{ secrets.AUTH_E2E_TEST_SECRET_SECONDARY }}
+      AUTUMN_SECRET_KEY: ${{ secrets.AUTUMN_SECRET_KEY }}
+      AUTUMN_REFERRAL_PROGRAM_ID: ${{ vars.AUTUMN_REFERRAL_PROGRAM_ID || 'default' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run check
+
+      - name: Contract tests
+        run: bun run test:contracts
+
+      - name: Unit tests
+        run: bun run test:unit
+
+      - name: Install Playwright browsers
+        if: env.LIVE_AUTUMN_SMOKE == '1'
+        run: bunx playwright install --with-deps chromium
+
+      - name: Bootstrap E2E users
+        if: env.LIVE_AUTUMN_SMOKE == '1'
+        run: bunx convex run tests:init
+
+      - name: Live smoke tests
+        if: env.LIVE_AUTUMN_SMOKE == '1'
+        run: bun run test:e2e:smoke
+
+      - name: Upload Playwright artifacts
+        if: failure() && env.LIVE_AUTUMN_SMOKE == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-smoke-artifacts
+          path: |
+            playwright-report
+            test-results

@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as autumn from "../autumn.js";
+import type * as e2e from "../e2e.js";
 import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
 import type * as messages from "../messages.js";
@@ -33,6 +34,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   autumn: typeof autumn;
+  e2e: typeof e2e;
   helpers: typeof helpers;
   http: typeof http;
   messages: typeof messages;

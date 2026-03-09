@@ -18,8 +18,17 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
 			id: 'secret',
 			authorize: async (params, ctx) => {
 				const secret = params.secret;
-				if (process.env.AUTH_E2E_TEST_SECRET && secret === process.env.AUTH_E2E_TEST_SECRET) {
-					const user = await ctx.runQuery(internal.tests.getTestUser);
+				const primarySecret =
+					process.env.AUTH_E2E_TEST_SECRET_PRIMARY ?? process.env.AUTH_E2E_TEST_SECRET;
+				const secondarySecret = process.env.AUTH_E2E_TEST_SECRET_SECONDARY;
+
+				if (primarySecret && secret === primarySecret) {
+					const user = await ctx.runQuery(internal.tests.getPrimaryTestUser);
+					return { userId: user!._id };
+				}
+
+				if (secondarySecret && secret === secondarySecret) {
+					const user = await ctx.runQuery(internal.tests.getSecondaryTestUser);
 					return { userId: user!._id };
 				}
 				throw new Error('Invalid secret');

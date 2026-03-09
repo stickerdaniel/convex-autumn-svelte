@@ -31,3 +31,6 @@ test-results
 
 # Claude
 .claude
+
+# Local reference clones
+docs/references/

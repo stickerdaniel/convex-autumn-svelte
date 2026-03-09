@@ -16,4 +16,6 @@ export const mockAutumnApi = {
 	listProducts: "listProducts",
 	usage: "usage",
 	query: "query",
+	listEvents: "listEvents",
+	aggregateEvents: "aggregateEvents",
 } as unknown as AutumnConvexApi;

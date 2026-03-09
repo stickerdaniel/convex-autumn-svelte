@@ -4,6 +4,7 @@ import { flushPromises } from "../helpers/flush.js";
 import { mockAutumnApi } from "../helpers/mock-api.js";
 import {
 	entity,
+	eventListResult,
 	fail,
 	freeCustomer,
 	ok,
@@ -186,13 +187,15 @@ describe("svelte client wrapper", () => {
 		expect(testState.convexClient.action).toHaveBeenCalledTimes(2);
 	});
 
-	test("listProducts, query, getEntity, and usage do not refetch customer", async () => {
+	test("listProducts, query, getEntity, usage, listEvents, and aggregateEvents do not refetch customer", async () => {
 		testState.convexClient.action
 			.mockResolvedValueOnce(ok(freeCustomer))
 			.mockResolvedValueOnce(ok({ list: products }))
 			.mockResolvedValueOnce(ok(queryResult))
 			.mockResolvedValueOnce(ok(entity))
-			.mockResolvedValueOnce(ok({ success: true }));
+			.mockResolvedValueOnce(ok({ success: true }))
+			.mockResolvedValueOnce(ok(eventListResult))
+			.mockResolvedValueOnce(ok(queryResult));
 
 		const { setupAutumn } = await importSvelteModules();
 		const autumn = setupAutumn({ convexApi: mockAutumnApi });
@@ -207,8 +210,14 @@ describe("svelte client wrapper", () => {
 		await expect(
 			autumn.usage({ featureId: "messages", value: 0 }),
 		).resolves.toEqual({ success: true });
+		await expect(
+			autumn.listEvents({ featureId: "messages", limit: 10 }),
+		).resolves.toEqual(eventListResult);
+		await expect(
+			autumn.aggregateEvents({ featureId: "messages", range: "30d" }),
+		).resolves.toEqual(queryResult);
 
-		expect(testState.convexClient.action).toHaveBeenCalledTimes(5);
+		expect(testState.convexClient.action).toHaveBeenCalledTimes(7);
 	});
 
 	test("checkout invokes dialog callback when a url is returned", async () => {

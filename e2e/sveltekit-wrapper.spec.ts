@@ -111,4 +111,25 @@ test.describe("sveltekit wrapper harness", () => {
 			})
 			.toBe(true);
 	});
+
+	test("listEvents and aggregateEvents do not trigger extra invalidation", async ({
+		page,
+	}) => {
+		await openHarness(page, "/__e2e/sveltekit");
+
+		const before = Number(await page.getByTestId("invalidate-count").textContent());
+
+		await page.getByTestId("run-listEvents").click();
+		await expect
+			.poll(async () => (await readJson(page, "result-listEvents"))?.list)
+			.toBeTruthy();
+
+		await page.getByTestId("run-aggregateEvents").click();
+		await expect
+			.poll(async () => (await readJson(page, "result-aggregateEvents"))?.data)
+			.toBeTruthy();
+
+		const after = Number(await page.getByTestId("invalidate-count").textContent());
+		expect(after).toBe(before);
+	});
 });

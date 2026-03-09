@@ -32,6 +32,9 @@ import type {
 	SetUsageResult,
 	QueryParams,
 	QueryResult,
+	EventListParams,
+	EventListResult,
+	EventAggregateParams,
 	Entity,
 	LocalCheckResult,
 	RefetchOptions,
@@ -399,6 +402,30 @@ export function createAutumnClientSvelteKit({
 	};
 
 	/**
+	 * List raw Autumn events without invalidating customer state.
+	 *
+	 * @param params - Event query parameters
+	 * @returns Paginated event list
+	 */
+	const listEvents = async (params: EventListParams): Promise<EventListResult> => {
+		const result = await client.action(convexApi.listEvents, params);
+		return unwrapAutumnResponse<EventListResult>(result);
+	};
+
+	/**
+	 * Aggregate Autumn events without invalidating customer state.
+	 *
+	 * @param params - Event aggregation parameters
+	 * @returns Aggregate analytics payload
+	 */
+	const aggregateEvents = async (
+		params: EventAggregateParams,
+	): Promise<QueryResult> => {
+		const result = await client.action(convexApi.aggregateEvents, params);
+		return unwrapAutumnResponse<QueryResult>(result);
+	};
+
+	/**
 	 * Manually refetch customer data.
 	 *
 	 * Uses SvelteKit's targeted invalidation for efficient refresh.
@@ -431,6 +458,8 @@ export function createAutumnClientSvelteKit({
 		listProducts,
 		usage,
 		query,
+		listEvents,
+		aggregateEvents,
 		refetch,
 	};
 

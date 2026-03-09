@@ -5,6 +5,7 @@ import { mockAutumnApi } from "../helpers/mock-api.js";
 import { createReactiveServerState } from "../helpers/reactive-state.svelte.js";
 import {
 	entity,
+	eventListResult,
 	freeCustomer,
 	ok,
 	products,
@@ -132,7 +133,7 @@ describe("sveltekit client wrapper", () => {
 		expect(invalidate).not.toHaveBeenCalled();
 	});
 
-	test("listProducts, query, getEntity, usage, and billingPortal do not invalidate", async () => {
+	test("listProducts, query, getEntity, usage, listEvents, aggregateEvents, and billingPortal do not invalidate", async () => {
 		const invalidate = vi.fn().mockResolvedValue(undefined);
 		const open = vi.fn();
 		vi.stubGlobal("window", {
@@ -145,6 +146,8 @@ describe("sveltekit client wrapper", () => {
 			.mockResolvedValueOnce(ok(queryResult))
 			.mockResolvedValueOnce(ok(entity))
 			.mockResolvedValueOnce(ok({ success: true }))
+			.mockResolvedValueOnce(ok(eventListResult))
+			.mockResolvedValueOnce(ok(queryResult))
 			.mockResolvedValueOnce(ok({ url: "https://billing.test" }));
 
 		const { setupAutumn } = await importSvelteKitModules();
@@ -162,6 +165,12 @@ describe("sveltekit client wrapper", () => {
 		await expect(
 			autumn.usage({ featureId: "messages", value: 0 }),
 		).resolves.toEqual({ success: true });
+		await expect(
+			autumn.listEvents({ featureId: "messages", limit: 10 }),
+		).resolves.toEqual(eventListResult);
+		await expect(
+			autumn.aggregateEvents({ featureId: "messages", range: "30d" }),
+		).resolves.toEqual(queryResult);
 		await autumn.openBillingPortal();
 
 		expect(invalidate).not.toHaveBeenCalled();

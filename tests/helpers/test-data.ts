@@ -2,6 +2,7 @@ import type {
 	AutumnActionResponse,
 	Customer,
 	Entity,
+	EventListResult,
 	Product,
 	QueryResult,
 } from "../../src/lib/svelte/types.js";
@@ -59,6 +60,23 @@ export const queryResult: QueryResult = {
 	data: {
 		list: [{ ts: 1, value: 1 }],
 	},
+};
+
+export const eventListResult: EventListResult = {
+	list: [
+		{
+			id: "evt_1",
+			timestamp: 1_735_689_600,
+			feature_id: "messages",
+			customer_id: "customer_free",
+			value: 1,
+			properties: {},
+		},
+	],
+	has_more: false,
+	offset: 0,
+	limit: 10,
+	total: 1,
 };
 
 export function ok<T>(data: T): AutumnActionResponse<T> {

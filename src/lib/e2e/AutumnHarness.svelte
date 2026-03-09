@@ -50,6 +50,17 @@
 			featureId: string;
 			range?: "24h" | "7d" | "30d" | "90d" | "last_cycle";
 		}): Promise<unknown>;
+		listEvents(params: {
+			featureId: string | string[];
+			limit?: number;
+			offset?: number;
+		}): Promise<unknown>;
+		aggregateEvents(params: {
+			featureId: string | string[];
+			range?: "24h" | "7d" | "30d" | "90d" | "last_cycle" | "1bc" | "3bc";
+			groupBy?: string;
+			binSize?: "day" | "hour";
+		}): Promise<unknown>;
 		refetch(): Promise<void>;
 	}
 
@@ -147,6 +158,18 @@
 	async function handleQuery() {
 		await runOperation("query", async () =>
 			await autumn.query({ featureId: "messages", range: "30d" }),
+		);
+	}
+
+	async function handleListEvents() {
+		await runOperation("listEvents", async () =>
+			await autumn.listEvents({ featureId: "messages", limit: 10, offset: 0 }),
+		);
+	}
+
+	async function handleAggregateEvents() {
+		await runOperation("aggregateEvents", async () =>
+			await autumn.aggregateEvents({ featureId: "messages", range: "30d" }),
 		);
 	}
 
@@ -323,6 +346,20 @@
 			<button data-testid="run-query" class="btn preset-filled-surface-500" onclick={handleQuery}>
 				Query
 			</button>
+			<button
+				data-testid="run-listEvents"
+				class="btn preset-filled-surface-500"
+				onclick={handleListEvents}
+			>
+				List Events
+			</button>
+			<button
+				data-testid="run-aggregateEvents"
+				class="btn preset-filled-surface-500"
+				onclick={handleAggregateEvents}
+			>
+				Aggregate Events
+			</button>
 			<button data-testid="run-attach" class="btn preset-filled-surface-500" onclick={handleAttach}>
 				Attach Pro
 			</button>
@@ -420,6 +457,8 @@
 			"usage",
 			"listProducts",
 			"query",
+			"listEvents",
+			"aggregateEvents",
 			"attach",
 			"cancel",
 			"createEntity",

@@ -73,6 +73,8 @@ export function setupAutumn({
  * @returns {function(): Promise<Product[]>} listProducts - List all available products
  * @returns {function(SetUsageParams): Promise<SetUsageResult>} usage - Set usage to an absolute value (not a query - use customer.features for reading)
  * @returns {function(QueryParams): Promise<QueryResult>} query - Query customer data with custom parameters
+ * @returns {function(EventListParams): Promise<EventListResult>} listEvents - List raw Autumn usage events
+ * @returns {function(EventAggregateParams): Promise<QueryResult>} aggregateEvents - Aggregate Autumn usage events
  * @returns {function(): Promise<void>} refetch - Manually refresh customer data
  *
  * @example
@@ -208,6 +210,8 @@ export function useCustomer() {
 		listProducts: autumn.listProducts,
 		usage: autumn.usage,
 		query: autumn.query,
+		listEvents: autumn.listEvents,
+		aggregateEvents: autumn.aggregateEvents,
 		refetch: autumn.refetch,
 	};
 }
@@ -248,6 +252,10 @@ export type {
 	FeatureUsageData,
 	QueryParams,
 	QueryResult,
+	EventRecord,
+	EventListParams,
+	EventListResult,
+	EventAggregateParams,
 	LocalCheckResult,
 	RefetchOptions,
 	AutumnConvexApi,

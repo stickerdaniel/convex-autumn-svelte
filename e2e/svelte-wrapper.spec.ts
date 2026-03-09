@@ -64,4 +64,23 @@ test.describe("vanilla svelte wrapper harness", () => {
 			.poll(async () => (await readJson(page, "customer-current"))?.messages?.usage)
 			.toBe(0);
 	});
+
+	test("listEvents and aggregateEvents expose analytics data after tracking", async ({ page }) => {
+		await openHarness(page, "/__e2e/svelte");
+
+		await page.getByTestId("run-track").click();
+		await expect
+			.poll(async () => (await readJson(page, "after-track"))?.messages?.usage)
+			.toBeGreaterThanOrEqual(1);
+
+		await page.getByTestId("run-listEvents").click();
+		await expect
+			.poll(async () => (await readJson(page, "result-listEvents"))?.total)
+			.toBeGreaterThanOrEqual(1);
+
+		await page.getByTestId("run-aggregateEvents").click();
+		await expect
+			.poll(async () => (await readJson(page, "result-aggregateEvents"))?.data)
+			.toBeTruthy();
+	});
 });

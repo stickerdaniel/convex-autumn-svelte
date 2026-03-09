@@ -66,57 +66,62 @@
 		open={openState}
 		onOpenChange={(e) => (openState = e.open)}
 		positioning={{ placement: 'top' }}
-		triggerBase="btn"
-		contentBase="card bg-surface-200-800 p-4 space-y-4 max-w-[320px]"
-		arrow
-		ids={{ trigger: 'user-menu-trigger' }}
 	>
-		{#snippet trigger()}
-			<Avatar src={viewer.image} name={viewer.name ?? 'User'} size="size-10" />
-		{/snippet}
-		{#snippet content()}
-			<div class="px-2 py-1.5 text-sm font-semibold">{viewer.name}</div>
+		<Popover.Trigger id="user-menu-trigger" class="btn">
+			<Avatar class="size-10 overflow-hidden rounded-full">
+				{#if viewer.image}
+					<Avatar.Image src={viewer.image} alt={viewer.name ?? 'User'} class="size-full object-cover" />
+				{/if}
+				<Avatar.Fallback class="flex size-full items-center justify-center bg-surface-300-700 text-xs font-semibold">
+					{(viewer.name ?? 'User').slice(0, 1).toUpperCase()}
+				</Avatar.Fallback>
+			</Avatar>
+		</Popover.Trigger>
+		<Popover.Positioner>
+			<Popover.Content class="card max-w-[320px] space-y-4 bg-surface-200-800 p-4">
+				<div class="px-2 py-1.5 text-sm font-semibold">{viewer.name}</div>
 
-			{#if autumn.customer}
-				<div class="rounded bg-surface-300-700 px-2 py-1.5 text-xs">
-					<div class="text-surface-600-400 mb-1">Current Plan</div>
-					<div class="font-semibold">
-						{isPro ? '⭐ Pro' : 'Free'}
+				{#if autumn.customer}
+					<div class="rounded bg-surface-300-700 px-2 py-1.5 text-xs">
+						<div class="text-surface-600-400 mb-1">Current Plan</div>
+						<div class="font-semibold">
+							{isPro ? '⭐ Pro' : 'Free'}
+						</div>
 					</div>
-				</div>
-			{/if}
+				{/if}
 
-			<hr class="hr border-surface-300-700" />
+				<hr class="hr border-surface-300-700" />
 
-			{#if !isPro}
-				<button
-					class="btn preset-filled-primary-500 w-full"
-					onclick={handleUpgrade}
-					disabled={isUpgrading}
-				>
-					{isUpgrading ? 'Processing...' : 'Upgrade to Pro'}
+				{#if !isPro}
+					<button
+						class="btn preset-filled-primary-500 w-full"
+						onclick={handleUpgrade}
+						disabled={isUpgrading}
+					>
+						{isUpgrading ? 'Processing...' : 'Upgrade to Pro'}
+					</button>
+				{/if}
+
+				<a href="/pricing" class="btn hover:preset-tonal w-full" onclick={() => (openState = false)}>
+					View Pricing
+				</a>
+
+				<a href="/account" class="btn hover:preset-tonal w-full" onclick={() => (openState = false)}>
+					Account Settings
+				</a>
+
+				{#if isPro}
+					<button class="btn hover:preset-tonal w-full" onclick={handleManageBilling}>
+						Manage Billing
+					</button>
+				{/if}
+
+				<hr class="hr border-surface-300-700" />
+
+				<button class="btn hover:preset-tonal w-full" onclick={handleSignOut}>
+					Sign out
 				</button>
-			{/if}
-
-			<a href="/pricing" class="btn hover:preset-tonal w-full" onclick={() => (openState = false)}>
-				View Pricing
-			</a>
-
-			<a href="/account" class="btn hover:preset-tonal w-full" onclick={() => (openState = false)}>
-				Account Settings
-			</a>
-
-			{#if isPro}
-				<button class="btn hover:preset-tonal w-full" onclick={handleManageBilling}>
-					Manage Billing
-				</button>
-			{/if}
-
-			<hr class="hr border-surface-300-700" />
-
-			<button class="btn hover:preset-tonal w-full" onclick={handleSignOut}>
-				Sign out
-			</button>
-		{/snippet}
+			</Popover.Content>
+		</Popover.Positioner>
 	</Popover>
 </div>

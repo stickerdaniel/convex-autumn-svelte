@@ -10,6 +10,8 @@ import type {
 	CheckoutParams,
 	CreateEntityParams,
 	CreateReferralCodeParams,
+	EventAggregateParams,
+	EventListParams,
 	GetEntityParams,
 	QueryParams,
 	RedeemReferralCodeParams,
@@ -25,6 +27,8 @@ import type {
 	CheckoutArgsType,
 	CreateEntityArgsType,
 	CreateReferralCodeArgsType,
+	EventAggregateArgsType,
+	EventListArgsType,
 	GetEntityArgsType,
 	QueryArgsType,
 	RedeemReferralCodeArgsType,
@@ -58,6 +62,11 @@ type _setupPaymentParamsMatch = ExpectExtends<
 type _createReferralCodeParamsMatch = ExpectExtends<
 	CreateReferralCodeParams,
 	CreateReferralCodeArgsType
+>;
+type _eventListParamsMatch = ExpectExtends<EventListParams, EventListArgsType>;
+type _eventAggregateParamsMatch = ExpectExtends<
+	EventAggregateParams,
+	EventAggregateArgsType
 >;
 type _redeemReferralCodeParamsMatch = ExpectExtends<
 	RedeemReferralCodeParams,

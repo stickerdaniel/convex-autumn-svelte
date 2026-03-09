@@ -151,8 +151,8 @@ export interface BillingPortalResult {
  */
 export interface CreateEntityParams {
 	id: string;
-	name: string;
-	featureId?: string;
+	name?: string;
+	featureId: string;
 	[key: string]: unknown;
 }
 

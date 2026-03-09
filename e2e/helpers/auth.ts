@@ -4,16 +4,36 @@ import type { Page } from "@playwright/test";
  * Shared authentication helpers for e2e tests.
  */
 
+const primarySecret =
+	process.env.AUTH_E2E_TEST_SECRET_PRIMARY ?? process.env.AUTH_E2E_TEST_SECRET;
+const secondarySecret = process.env.AUTH_E2E_TEST_SECRET_SECONDARY;
+
+function requireSecret(secret: string | undefined, label: string): string {
+	if (!secret) {
+		throw new Error(`Missing ${label} environment variable for E2E auth.`);
+	}
+
+	return secret;
+}
+
 /**
  * Sign in with the test user.
  *
  * @param page - The Playwright page instance.
  */
-export async function signIn(page: Page): Promise<void> {
+export async function signIn(page: Page, secret = requireSecret(primarySecret, "AUTH_E2E_TEST_SECRET_PRIMARY")): Promise<void> {
 	await page.goto("/signin");
-	await page.getByLabel("Secret").fill(process.env.AUTH_E2E_TEST_SECRET!);
+	await page.getByLabel("Secret").fill(secret);
 	await page.getByRole("button").getByText("Sign in with secret").click();
 	await page.waitForURL("/product");
+}
+
+export async function signInAsPrimary(page: Page): Promise<void> {
+	await signIn(page, requireSecret(primarySecret, "AUTH_E2E_TEST_SECRET_PRIMARY"));
+}
+
+export async function signInAsSecondary(page: Page): Promise<void> {
+	await signIn(page, requireSecret(secondarySecret, "AUTH_E2E_TEST_SECRET_SECONDARY"));
 }
 
 /**
@@ -22,13 +42,8 @@ export async function signIn(page: Page): Promise<void> {
  * @param page - The Playwright page instance.
  */
 export async function signOut(page: Page): Promise<void> {
-	const currentUrl = page.url();
-	if (!currentUrl.includes("/product")) {
-		await page.goto("/product");
-	}
-
-	await page.locator("#user-menu-trigger").click();
-	await page.getByRole("button").getByText("Sign out").click();
+	await page.context().clearCookies();
+	await page.goto("/");
 }
 
 /**
@@ -53,7 +68,7 @@ export async function navigateToAccount(page: Page): Promise<void> {
  * @param page - The Playwright page instance.
  */
 export async function signInAndNavigateToAccount(page: Page): Promise<void> {
-	await signIn(page);
+	await signInAsPrimary(page);
 	await page.goto("/account");
 	await page.waitForURL("/account");
 }

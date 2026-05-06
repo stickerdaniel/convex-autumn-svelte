@@ -1,4 +1,5 @@
 import { createAccount } from "@convex-dev/auth/server";
+import { internal } from "./_generated/api";
 import { internalAction, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 
@@ -64,7 +65,7 @@ export const init = internalAction({
   args: {},
   handler: async (ctx) => {
     for (const email of TEST_USER_EMAILS) {
-      const existingUser = await findUserByEmail(ctx, email);
+      const existingUser = await ctx.runQuery(internal.tests.getTestUserByEmail, { email });
       if (existingUser !== null) {
         console.info(`Test user ${email} already exists, skipping creation`);
         continue;

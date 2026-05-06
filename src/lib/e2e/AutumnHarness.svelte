@@ -187,16 +187,19 @@
 
 	async function handleCreateEntity() {
 		const nextEntityId = `e2e-${mode}-${Date.now()}`;
-		createdEntityId = nextEntityId;
 		entityIdInput = nextEntityId;
 
 		await runOperation("createEntity", async () =>
 			await autumn.createEntity({
 				id: nextEntityId,
 				name: `E2E ${mode} entity`,
-				featureId: "messages",
+				featureId: "seats",
 			}),
 		);
+
+		if (operationErrors.createEntity === null) {
+			createdEntityId = nextEntityId;
+		}
 	}
 
 	async function handleGetEntity() {
@@ -238,8 +241,8 @@
 
 	async function handleCheckout() {
 		capturedCheckoutUrl = null;
-		await runOperation("checkout", async () =>
-			await autumn.checkout({
+		await runOperation("checkout", async () => {
+			const result = (await autumn.checkout({
 				productId: "pro",
 				successUrl: `${window.location.origin}/__e2e/${mode}`,
 				dialog: captureRedirects
@@ -247,16 +250,24 @@
 							capturedCheckoutUrl = url;
 						}
 					: undefined,
-			}),
-		);
+			})) as { url?: string } | undefined;
+			if (!captureRedirects && result?.url) {
+				window.location.href = result.url;
+			}
+			return result;
+		});
 	}
 
 	async function handleSetupPayment() {
-		await runOperation("setupPayment", async () =>
-			await autumn.setupPayment({
+		await runOperation("setupPayment", async () => {
+			const result = (await autumn.setupPayment({
 				successUrl: `${window.location.origin}/__e2e/${mode}`,
-			}),
-		);
+			})) as { url?: string } | undefined;
+			if (!captureRedirects && result?.url) {
+				window.location.href = result.url;
+			}
+			return result;
+		});
 	}
 
 	async function handleBillingPortal() {
@@ -446,6 +457,7 @@
 			<pre data-testid="captured-billing-portal-url" class="overflow-auto text-xs">{serialize(capturedBillingPortalUrl)}</pre>
 			<pre data-testid="created-entity-id" class="overflow-auto text-xs">{serialize(createdEntityId)}</pre>
 			<pre data-testid="created-referral-code" class="overflow-auto text-xs">{serialize(createdReferralCode)}</pre>
+			<pre data-testid="operation-errors" class="overflow-auto text-xs">{serialize(operationErrors)}</pre>
 		</div>
 	</section>
 

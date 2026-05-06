@@ -66,7 +66,6 @@ describe("svelte client wrapper", () => {
 		expect(testState.convexClient.action).toHaveBeenCalledWith(
 			mockAutumnApi.createCustomer,
 			{
-				expand: {},
 				errorOnNotFound: false,
 			},
 		);
@@ -150,7 +149,6 @@ describe("svelte client wrapper", () => {
 			3,
 			mockAutumnApi.createCustomer,
 			{
-				expand: {},
 				errorOnNotFound: false,
 			},
 		);

@@ -12,7 +12,7 @@ export default defineConfig({
 	},
 	webServer: {
 		command:
-			'env ENABLE_E2E_HARNESS=1 PUBLIC_E2E_TEST=1 bun run build && env ENABLE_E2E_HARNESS=1 PUBLIC_E2E_TEST=1 bun run preview',
+			'env ENABLE_E2E_HARNESS=1 PUBLIC_E2E_TEST=1 bun run build && env ENABLE_E2E_HARNESS=1 PUBLIC_E2E_TEST=1 bun run preview -- --host 127.0.0.1 --port 4173',
 		port: 4173,
 		reuseExistingServer: !process.env.CI,
 	},

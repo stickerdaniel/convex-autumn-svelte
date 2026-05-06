@@ -49,16 +49,34 @@ export const resetCurrentUser = action({
 			errorOnNotFound: false,
 		});
 
-		const customer = unwrap(customerResponse) as { entities?: { id: string }[] };
+		const customer = unwrap(customerResponse) as {
+			entities?: { id: string }[];
+			products?: { id: string }[];
+		};
 
+		const cleanupErrors: string[] = [];
 		for (const entity of customer.entities ?? []) {
 			if (entity.id.startsWith("e2e-")) {
 				try {
 					await autumn.entities.delete(ctx, entity.id);
 				} catch (error) {
-					console.info(`Skipping entity cleanup for ${entity.id}:`, error);
+					const message = error instanceof Error ? error.message : String(error);
+					if (/not found/i.test(message)) {
+						continue;
+					}
+					cleanupErrors.push(`${entity.id}: ${message}`);
 				}
 			}
+		}
+		if (cleanupErrors.length > 0) {
+			throw new Error(`Entity cleanup failed: ${cleanupErrors.join("; ")}`);
+		}
+
+		const hasFree = (customer.products ?? []).some((product) => product.id === "free");
+		if (!hasFree) {
+			await ctx.runAction(api.autumn.attach as any, {
+				productId: "free",
+			});
 		}
 
 		const refreshed = await ctx.runAction(api.autumn.createCustomer as any, {

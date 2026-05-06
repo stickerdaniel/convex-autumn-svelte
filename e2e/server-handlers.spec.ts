@@ -19,6 +19,12 @@ test.describe("server helper harness", () => {
 		await openHarness(page, "/__e2e/sveltekit");
 
 		await page.getByTestId("run-createEntity").click();
+		await expect
+			.poll(async () => {
+				const value = await readJson(page, "created-entity-id");
+				return typeof value === "string" && value.startsWith("e2e-");
+			})
+			.toBe(true);
 		const entityId = (await readJson(page, "created-entity-id")) as string;
 
 		await page.goto(`/__e2e/server?entityId=${entityId}`);

@@ -52,6 +52,9 @@ bun run check
 bun test
 ```
 
+See [AGENTS.md](./AGENTS.md) for project conventions and the Convex
+dashboard env vars CI relies on.
+
 ## License
 
 MIT

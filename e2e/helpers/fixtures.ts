@@ -11,7 +11,10 @@ export async function openHarness(
 	page: Page,
 	route: string,
 	secret?: string,
+	options: { requireCustomer?: boolean } = {},
 ) {
+	const { requireCustomer = true } = options;
+
 	await page.goto(route);
 
 	if (page.url().includes("/signin")) {
@@ -20,6 +23,16 @@ export async function openHarness(
 	}
 
 	await expect(page.getByTestId("mode")).toBeVisible();
+
+	if (requireCustomer) {
+		// Convex auth setAuth + autumn fetchCustomer are async after navigation.
+		// Wait until customer-current is non-null so tests can read it directly.
+		await expect
+			.poll(async () => await readJson(page, "customer-current"), {
+				timeout: 15_000,
+			})
+			.not.toBeNull();
+	}
 }
 
 export async function resetHarnessState(
@@ -31,10 +44,13 @@ export async function resetHarnessState(
 	await page.getByTestId("run-reset").click();
 
 	await expect
-		.poll(async () => {
-			const customer = await readJson(page, "customer-current");
-			return customer?.products ?? [];
-		})
+		.poll(
+			async () => {
+				const customer = await readJson(page, "customer-current");
+				return customer?.products ?? [];
+			},
+			{ timeout: 15_000 },
+		)
 		.toContain("free");
 }
 

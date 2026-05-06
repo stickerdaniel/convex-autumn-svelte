@@ -1,86 +1,85 @@
-# Project setup & maintainer notes
+This project is a Svelte 5 reactive wrapper for Convex Autumn billing. It provides type-safe, reactive billing and subscription management for Svelte applications using Svelte 5 runes and best practices.
 
-Notes for maintainers (and coding agents) working on this repo. Library
-consumers don't need any of this — see the [README](./README.md) and the
-[Vanilla Svelte](./src/lib/svelte/README.md) / [SvelteKit](./src/lib/sveltekit/README.md)
-guides for usage.
+**Convex dashboard:** [Default Environment Variables](https://dashboard.convex.dev/t/daniel-sticker-name/convex-autumn-svelte/settings#env-vars) — set under the **Preview** scope so each `convex deploy --preview-create` deployment in CI inherits them: `ENABLE_E2E_HARNESS=1`, `AUTUMN_SECRET_KEY`, `AUTH_E2E_TEST_SECRET_PRIMARY`, `AUTH_E2E_TEST_SECRET_SECONDARY`, `JWT_PRIVATE_KEY`, `JWKS`, plus any auth provider secrets exercised by E2E.
 
-## Convex deployments
+**Key Principles:**
+- Use Svelte 5 runes ($state, $derived, $effect) for reactivity
+- Provide both vanilla Svelte and SvelteKit (with SSR) implementations
+- Use Context7 MCP to fetch Autumn docs (translate React concepts to Svelte 5)
+- Use Svelte MCP to verify reactive implementation decisions
+- Prefer $state over deprecated stores
+- Focus on polished, production-ready code for public release
 
-The repo has two Convex deployments under the
-[`daniel-sticker-name/convex-autumn-svelte`](https://dashboard.convex.dev/t/daniel-sticker-name/convex-autumn-svelte)
-project:
 
-- **Dev** (`dev:calm-seal-185`) — personal dev deployment, used by `bun dev`
-  via the values in `.env.local`.
-- **Preview** — ephemeral deployments created per PR by CI via
-  `convex deploy --preview-create pr-<number>`. Auto-cleaned by Convex
-  after 5 days. Uses the **preview deploy key** stored in the GitHub
-  secret `CONVEX_DEPLOY_KEY`.
+<claude-code-instructions>
+<important_info>
+Use Svelte 5's new syntax with TypeScript for reactivity, props, events, and content passing. Prioritize this over Svelte 4 syntax, always. Use `bun` as the package manager ("bun add", "bun add -d (for dev dependencies), "bunx").
 
-## Required Convex environment variables
+**Key Svelte 5 Syntax Changes & Rune Usage:**
 
-Set these in the Convex dashboard for the **Preview** scope so every
-new preview deployment inherits them:
+- **`$state()`:**
+  - **When:** Use for declaring **mutable, independent pieces of reactive state**. This is the fundamental building block for values that change over time and should trigger UI updates or recalculations. Think of component-local variables, user inputs, fetched data containers, etc.
+  - **How:** `let count = $state(0);`
+  - **Note:** For complex objects/arrays where you only ever replace the entire value (not mutate internals), use `$state.raw()` for potential performance benefits by avoiding deep reactivity proxies.
+- **`$derived()`:**
+  - **When:** Use for values that are **computed based on other reactive sources** (`$state`, `$props`, other `$derived`). The computation should be **pure** (no side effects). Use whenever a value's existence or content _depends_ entirely on other reactive values. Examples: filtered lists, formatted strings, boolean flags derived from other state.
+  - **How:** `let doubled = $derived(count * 2);` or for multi-step computations: `let complexValue = $derived.by(() => { /* ... */ return result; });`
+  - **Note:** Always explicitly type derived arrays in TypeScript: `let items: Item[] = $derived(...)`.
+- **`$effect()`:**
+  - **When:** Use for running **side effects** in response to changes in reactive dependencies. This runs _after_ the DOM has been updated. Ideal for interacting with the DOM directly (e.g., canvas drawing), logging, integrating with third-party non-Svelte libraries, or triggering async operations based on state changes.
+  - **Avoid:** **Do not use `$effect` to synchronize state** (e.g., setting one `$state` based on another) – use `$derived` for that. Avoid mutating state _inside_ an effect where possible to prevent complex flows and potential infinite loops. If needed, use `untrack()`.
+  - **How:** `$effect(() => { console.log(count); });`
+  - **`$effect.pre()`:** Use in rare cases when you need an effect to run _before_ the DOM updates (e.g., reading DOM measurements before a change).
+- **`$props()`:**
+  - **When:** Use inside the `<script>` block to declare the properties (props) a component accepts from its parent.
+  - **How:** `let { name = 'World', requiredProp }: { name?: string, requiredProp: number } = $props();`
+- **`$bindable()`:**
+  - **When:** Use inside `$props()` to declare a prop that supports two-way binding with `bind:`.
+  - **How:** `let { value = $bindable() } = $props<{ value: string }>();`
+- **Events:** Use standard HTML event attributes (`onclick={handler}`, `onsubmit={handler}`) instead of `on:`.
+- **Content/Slots:** Use `{#snippet name()}...{/snippet}` to define content snippets and `{@render name()}` to render them. Pass snippets as props: `let { header } = $props<{ header: Snippet }>();`. The default content passed between component tags is available via the implicit `children` snippet prop.
+- **TypeScript:** Always use `<script lang="ts">`. Explicitly type variables, props, function arguments/returns, and derived arrays. Never use the any type, this will cause Eslint errors.
+  Runes are a core Svelte 5 feature that works out of the box. They don't require any imports.
 
-[**Convex → Project Settings → Default Environment Variables**](https://dashboard.convex.dev/t/daniel-sticker-name/convex-autumn-svelte/settings#env-vars)
+**component/page splitting**
+Don't over complicate things. You can always come back and refine.
+Make components to isolate logic and/or make something reusable. You can use Snippets to isolate logic without having to create a whole new component... But if you're using an each block, and there is logic that each item needs access to, that's a great place to start.
+Other, not as important reasons, would be for clean access to layout items... The root +layouts generally should't have much in the way of HTML / styles, but have a lot of components.
+On the server side, separate business logic from transport logic... So the actual load function holds a series of smaller functions that are very clear of what they do. A really simplified version of this:
 
-| Variable | Value | Why |
-|---|---|---|
-| `ENABLE_E2E_HARNESS` | `1` | `assertHarnessEnabled` in `src/lib/convex/e2e.ts` rejects calls otherwise. Needed for the Playwright reset action. |
-| `AUTUMN_SECRET_KEY` | Autumn test key (`am_sk_test_…`) | `src/lib/convex/autumn.ts` throws on module load if missing. |
-| `AUTH_E2E_TEST_SECRET_PRIMARY` | `test-secret` | JWT secret the Playwright harness signs primary-user tokens with. Must match what `e2e/helpers/auth.ts` uses. |
-| `AUTH_E2E_TEST_SECRET_SECONDARY` | `secondary-secret` | Same, for the secondary test user. |
-| `JWT_PRIVATE_KEY`, `JWKS` | Copy from the dev deployment | Convex Auth uses these to sign/verify session tokens. |
-| `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET` | OAuth app creds | Only if E2E exercises GitHub sign-in. |
-| `AUTH_RESEND_KEY` | Resend API key | Only if E2E exercises email flows. |
-| `SITE_URL` | optional | Used by Convex Auth for redirect URLs. |
+export const load: PageServerLoad = async ({ locals }) => {
+const authorized = check_authorization(locals)
 
-The same variables exist on the dev deployment for local work — kept in
-sync manually. `bunx convex env list` shows the current values.
+if(!authorized) {
+redirect(303, '/login');
+}
 
-## GitHub repository secrets
+const data = get_data(db)
 
-Set under **Settings → Secrets and variables → Actions**:
+if(!data){
+error(500)
+}
 
-| Secret | Where it's used |
-|---|---|
-| `CONVEX_DEPLOY_KEY` | Preview deploy key. `live-autumn.yml` uses it for `convex deploy --preview-create`. |
-| `AUTH_E2E_TEST_SECRET_PRIMARY` | Read by Playwright (`e2e/helpers/auth.ts`) on the runner — values must match what's in the Convex Preview env. |
-| `AUTH_E2E_TEST_SECRET_SECONDARY` | Same. |
-| `CLAUDE_CODE_OAUTH_TOKEN` | Used by `claude.yml`. |
+return {
+...data
+};
+};
+This makes it really easy to see what the load function is doing without having to dive into all of the business logic. Don't abstract those functions to different files until they need to be reused. But something like check_authorization() would probably be used a lot, and should be abstracted out. If you are asked to write Tests, they should live next to the file to save mental overhead.
 
-`AUTUMN_SECRET_KEY` is intentionally **not** a GitHub secret — only the
-Convex backend reads it, and the dashboard's Default Environment
-Variables propagate it to every preview.
+**Assets**
+For best performance, put most static assets used in components (like images) under `src` (e.g., `src/lib/assets`).
 
-## CI workflows
+- **`src` Assets:** Vite processes these, adding content hashes to filenames (\( myImage-a89cfcb3.png \)). This enables aggressive browser caching, significantly reducing load times. Standard reference via `import`:
 
-- **`.github/workflows/ci.yml`** — runs on every push/PR. Typecheck,
-  contract tests, unit tests. Cheap, fast, no Convex deployment.
-- **`.github/workflows/live-autumn.yml`** — runs the full Playwright
-  suite against an ephemeral Convex preview. Triggers:
-  - PRs that touch source, configs, or the workflow itself
-  - Nightly cron (4:00 UTC) → preview name `nightly`
-  - `workflow_dispatch` → preview name `manual-<run_id>`
-  - Skipped on forked PRs and bot PRs (no secret access).
-  - `concurrency` cancels stale runs on the same PR so a second push
-    doesn't recreate the preview while Playwright still runs against
-    the first one (Convex deletes-and-recreates same-name previews).
-- **`.github/workflows/claude.yml`** — Claude Code review automation.
+  ```svelte
+  <script>
+    import img from "$lib/images/img.avif"
+  </script>
 
-## Local development
+  <img src={img} alt="Image" />
+  ```
 
-```bash
-bun install
-bun dev              # frontend + convex dev concurrently
-bun run package      # build the library
-bun run check        # svelte-check typecheck
-bun test             # contract + unit tests
-bun run test:e2e     # Playwright suite (needs PUBLIC_CONVEX_URL set, e.g. dev deployment)
-```
+- **`static` Assets:** Use _only_ for files needing a fixed root path (\( robots.txt, favicon.ico \)) that _shouldn't_ be processed by Vite. These don't get hashed and require slower browser validation checks.
 
-`.env.local` provides `PUBLIC_CONVEX_URL`, `CONVEX_DEPLOYMENT`, and the
-local `AUTH_E2E_TEST_SECRET` for dev work. The CI runs do not use this
-file — the typecheck job sets a placeholder `PUBLIC_CONVEX_URL` and the
-live-e2e job derives the URL from `convex deploy --cmd`.
+Always add the `svelte-preprocess-import-assets` package (`bun add -d svelte-preprocess-import-assets`) to use simpler syntax that doesnt require the additional import: `<img src="$lib/images/img.avif" alt="Image" />`. Always ask the user to provide images in the .avif format if its a .png or .jpg image (for cdn images as well).
+</claude-code-instructions>

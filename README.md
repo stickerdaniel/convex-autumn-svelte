@@ -52,8 +52,8 @@ bun run check
 bun test
 ```
 
-For maintainer setup (Convex deployments, dashboard env vars, CI secrets,
-preview deployment workflow), see [AGENTS.md](./AGENTS.md).
+See [AGENTS.md](./AGENTS.md) for project conventions and the Convex
+dashboard env vars CI relies on.
 
 ## License
 

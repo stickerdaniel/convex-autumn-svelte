@@ -52,6 +52,9 @@ bun run check
 bun test
 ```
 
+For maintainer setup (Convex deployments, dashboard env vars, CI secrets,
+preview deployment workflow), see [AGENTS.md](./AGENTS.md).
+
 ## License
 
 MIT

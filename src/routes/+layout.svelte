@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setupConvex } from 'convex-svelte';
+	import { setupConvex } from '@mmailaender/convex-svelte';
 	import { setupConvexAuth } from '@mmailaender/convex-auth-svelte/sveltekit';
 	import { setupAutumn } from '$lib/sveltekit';
 	import { invalidate } from '$app/navigation';

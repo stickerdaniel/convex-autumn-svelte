@@ -129,7 +129,7 @@ export const autumn = new Autumn(components.autumn, {
 ## Installation
 
 ```bash
-bun add @stickerdaniel/convex-autumn-svelte convex convex-svelte
+bun add @stickerdaniel/convex-autumn-svelte convex @mmailaender/convex-svelte
 ```
 
 ## Setup
@@ -178,7 +178,7 @@ export const {
 ```svelte
 <!-- App.svelte or +layout.svelte -->
 <script lang="ts">
-  import { setupConvex } from 'convex-svelte';
+  import { setupConvex } from '@mmailaender/convex-svelte';
   import { setupAutumn } from '@stickerdaniel/convex-autumn-svelte/svelte';
   import { api } from './convex/_generated/api';
   import { PUBLIC_CONVEX_URL } from '$env/static/public';
@@ -448,7 +448,7 @@ export const send = action({
 
 ```svelte
 <script lang="ts">
-  import { useConvexClient } from 'convex-svelte';
+  import { useConvexClient } from '@mmailaender/convex-svelte';
   import { useCustomer } from '@stickerdaniel/convex-autumn-svelte/svelte';
   import { api } from './convex/_generated/api';
 
@@ -519,7 +519,7 @@ export const send = action({
 ```svelte
 <!-- src/lib/demo/Chat/Chat.svelte - Client component -->
 <script lang="ts">
-  import { useConvexClient } from 'convex-svelte';
+  import { useConvexClient } from '@mmailaender/convex-svelte';
   import { useCustomer } from '@stickerdaniel/convex-autumn-svelte/svelte';
   import { api } from '$lib/convex/_generated/api';
 

@@ -3,7 +3,7 @@
 	import Chat from '$lib/demo/Chat/Chat.svelte';
 	import ChatIntro from '$lib/demo/Chat/ChatIntro.svelte';
 	import UserMenu from '$lib/demo/UserMenu.svelte';
-	import { useQuery } from 'convex-svelte';
+	import { useQuery } from '@mmailaender/convex-svelte';
 	import { useCustomer } from '$lib/sveltekit';
 
 	let { data } = $props();

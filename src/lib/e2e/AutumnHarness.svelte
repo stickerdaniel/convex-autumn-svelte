@@ -193,7 +193,7 @@
 			await autumn.createEntity({
 				id: nextEntityId,
 				name: `E2E ${mode} entity`,
-				featureId: "messages",
+				featureId: "seats",
 			}),
 		);
 
@@ -241,8 +241,8 @@
 
 	async function handleCheckout() {
 		capturedCheckoutUrl = null;
-		await runOperation("checkout", async () =>
-			await autumn.checkout({
+		await runOperation("checkout", async () => {
+			const result = (await autumn.checkout({
 				productId: "pro",
 				successUrl: `${window.location.origin}/__e2e/${mode}`,
 				dialog: captureRedirects
@@ -250,16 +250,24 @@
 							capturedCheckoutUrl = url;
 						}
 					: undefined,
-			}),
-		);
+			})) as { url?: string } | undefined;
+			if (!captureRedirects && result?.url) {
+				window.location.href = result.url;
+			}
+			return result;
+		});
 	}
 
 	async function handleSetupPayment() {
-		await runOperation("setupPayment", async () =>
-			await autumn.setupPayment({
+		await runOperation("setupPayment", async () => {
+			const result = (await autumn.setupPayment({
 				successUrl: `${window.location.origin}/__e2e/${mode}`,
-			}),
-		);
+			})) as { url?: string } | undefined;
+			if (!captureRedirects && result?.url) {
+				window.location.href = result.url;
+			}
+			return result;
+		});
 	}
 
 	async function handleBillingPortal() {

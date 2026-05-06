@@ -86,7 +86,6 @@ export function createAutumnClient({
 
 		try {
 			const result = await client.action(convexApi.createCustomer, {
-				expand: {},
 				errorOnNotFound: false,
 			});
 			customerState.data = unwrapAutumnResponse<Customer | null>(result);

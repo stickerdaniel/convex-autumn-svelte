@@ -16,6 +16,17 @@ export const messages = feature({
 });
 
 /**
+ * Continuous-use seats feature, used as an entity feature in E2E tests.
+ * Autumn rejects entities linked to consumable (single_use) features,
+ * so a continuous_use feature is required for createEntity flows.
+ */
+export const seats = feature({
+	id: "seats",
+	name: "Seats",
+	type: "continuous_use",
+});
+
+/**
  * Free tier product with limited message usage.
  */
 export const free = product({
@@ -26,6 +37,10 @@ export const free = product({
 			feature_id: messages.id,
 			included_usage: 10,
 			interval: "month",
+		}),
+		featureItem({
+			feature_id: seats.id,
+			included_usage: 1,
 		}),
 	],
 });
@@ -46,6 +61,10 @@ export const pro = product({
 			feature_id: messages.id,
 			included_usage: "inf",
 			interval: "month",
+		}),
+		featureItem({
+			feature_id: seats.id,
+			included_usage: 5,
 		}),
 	],
 });

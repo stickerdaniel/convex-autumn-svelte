@@ -10,6 +10,7 @@ jobs:
     env:
       ENABLE_E2E_HARNESS: "1"
       PUBLIC_E2E_TEST: "1"
+      PUBLIC_CONVEX_URL: "https://placeholder.convex.cloud"
     steps:
       - uses: actions/checkout@v4
 

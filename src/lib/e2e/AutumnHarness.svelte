@@ -187,7 +187,6 @@
 
 	async function handleCreateEntity() {
 		const nextEntityId = `e2e-${mode}-${Date.now()}`;
-		createdEntityId = nextEntityId;
 		entityIdInput = nextEntityId;
 
 		await runOperation("createEntity", async () =>
@@ -197,6 +196,10 @@
 				featureId: "messages",
 			}),
 		);
+
+		if (operationErrors.createEntity === null) {
+			createdEntityId = nextEntityId;
+		}
 	}
 
 	async function handleGetEntity() {
@@ -446,6 +449,7 @@
 			<pre data-testid="captured-billing-portal-url" class="overflow-auto text-xs">{serialize(capturedBillingPortalUrl)}</pre>
 			<pre data-testid="created-entity-id" class="overflow-auto text-xs">{serialize(createdEntityId)}</pre>
 			<pre data-testid="created-referral-code" class="overflow-auto text-xs">{serialize(createdReferralCode)}</pre>
+			<pre data-testid="operation-errors" class="overflow-auto text-xs">{serialize(operationErrors)}</pre>
 		</div>
 	</section>
 

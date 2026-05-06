@@ -43,7 +43,19 @@ export async function signInAsSecondary(page: Page): Promise<void> {
  */
 export async function signOut(page: Page): Promise<void> {
 	await page.context().clearCookies();
-	await page.goto("/");
+	try {
+		await page.evaluate(() => {
+			try {
+				localStorage.clear();
+				sessionStorage.clear();
+			} catch {
+				// storage may be inaccessible before any navigation; ignore
+			}
+		});
+	} catch {
+		// no document yet (fresh context) — nothing to clear
+	}
+	await page.goto("/", { waitUntil: "networkidle" });
 }
 
 /**

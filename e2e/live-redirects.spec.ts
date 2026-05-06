@@ -15,6 +15,9 @@ test.describe("live redirect flows", () => {
 		await page.getByTestId("run-checkout").click();
 
 		await expect
+			.poll(async () => (await readJson(page, "operation-errors"))?.checkout ?? null)
+			.toBeNull();
+		await expect
 			.poll(() => page.url())
 			.toMatch(/^https?:\/\//);
 		expect(page.url()).not.toContain("/__e2e/sveltekit");
@@ -25,6 +28,9 @@ test.describe("live redirect flows", () => {
 
 		await page.getByTestId("run-setupPayment").click();
 
+		await expect
+			.poll(async () => (await readJson(page, "operation-errors"))?.setupPayment ?? null)
+			.toBeNull();
 		await expect
 			.poll(() => page.url())
 			.toMatch(/^https?:\/\//);

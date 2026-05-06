@@ -6,21 +6,36 @@ on:
     - cron: "0 4 * * *"
   pull_request:
     paths:
+      - "src/**"
+      - "e2e/**"
+      - "tests/**"
+      - "playwright.config.ts"
       - "package.json"
       - "bun.lock"
+      - "convex.json"
+      - "vite.config.ts"
+      - "svelte.config.js"
+      - "autumn.config.ts"
       - ".github/workflows/live-autumn.yml"
+
+concurrency:
+  group: live-e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   live-e2e:
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       !endsWith(github.actor, '[bot]'))
     runs-on: ubuntu-latest
     env:
       ENABLE_E2E_HARNESS: "1"
       PUBLIC_E2E_TEST: "1"
-      PUBLIC_CONVEX_URL: ${{ secrets.PUBLIC_CONVEX_URL }}
       AUTH_E2E_TEST_SECRET_PRIMARY: ${{ secrets.AUTH_E2E_TEST_SECRET_PRIMARY }}
       AUTH_E2E_TEST_SECRET_SECONDARY: ${{ secrets.AUTH_E2E_TEST_SECRET_SECONDARY }}
-      AUTUMN_SECRET_KEY: ${{ secrets.AUTUMN_SECRET_KEY }}
       AUTUMN_REFERRAL_PROGRAM_ID: ${{ vars.AUTUMN_REFERRAL_PROGRAM_ID || 'default' }}
+      CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -34,8 +49,22 @@ jobs:
       - name: Install Playwright browsers
         run: bunx playwright install --with-deps chromium
 
-      - name: Bootstrap E2E users
-        run: bunx convex run tests:init
+      - name: Compute preview deployment name
+        run: |
+          if [ -n "${{ github.event.pull_request.number }}" ]; then
+            echo "PREVIEW_NAME=pr-${{ github.event.pull_request.number }}" >> "$GITHUB_ENV"
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "PREVIEW_NAME=nightly" >> "$GITHUB_ENV"
+          else
+            echo "PREVIEW_NAME=manual-${{ github.run_id }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Deploy preview, seed test users, capture URL
+        run: |
+          bunx convex deploy \
+            --preview-create "$PREVIEW_NAME" \
+            --preview-run tests:init \
+            --cmd 'echo "PUBLIC_CONVEX_URL=$PUBLIC_CONVEX_URL" >> "$GITHUB_ENV"'
 
       - name: Run live regression suite
         run: bun run test:e2e

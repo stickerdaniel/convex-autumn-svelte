@@ -229,17 +229,11 @@ The `identify` function in your `convex/autumn.ts` receives the authenticated co
 ## Installation
 
 ```bash
-bun add @stickerdaniel/convex-autumn-svelte convex @mmailaender/convex-svelte
+bun add @stickerdaniel/convex-autumn-svelte convex convex-svelte
 ```
 
-> **Using `@mmailaender/convex-auth-svelte` (≤ 0.1.3) alongside this package?**
-> The auth wrapper has a static `import from "convex-svelte"` (the unscoped name) in its dist output. Until that is fixed upstream, add this alias to your own `package.json` so module resolution succeeds:
->
-> ```jsonc
-> "convex-svelte": "npm:@mmailaender/convex-svelte@0.19.0"
-> ```
->
-> Without the alias the build fails before SSR even runs — `ssr.noExternal` cannot substitute, it only changes bundling. If a duplicate Svelte instance still surfaces during SSR after the alias is in place, additionally set `ssr.noExternal: ['@mmailaender/convex-auth-svelte']` in `vite.config.ts`. This package itself no longer needs either workaround.
+> **Using `@mmailaender/convex-auth-svelte` alongside this package?**
+> Both packages import the unscoped `convex-svelte`, so no alias is needed. If a duplicate Svelte instance surfaces during SSR, set `ssr.noExternal: ['@mmailaender/convex-auth-svelte']` in `vite.config.ts`.
 
 ## Setup
 
@@ -323,7 +317,7 @@ Initialize Autumn in your layout component with server state and pass the `inval
 ```svelte
 <!-- src/routes/+layout.svelte -->
 <script lang="ts">
-  import { setupConvex } from '@mmailaender/convex-svelte';
+  import { setupConvex } from 'convex-svelte';
   import { setupAutumn } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
   import { invalidate } from '$app/navigation';
   import { api } from '$lib/convex/_generated/api';
@@ -507,7 +501,7 @@ export const send = action({
 
 ```svelte
 <script lang="ts">
-  import { useConvexClient } from '@mmailaender/convex-svelte';
+  import { useConvexClient } from 'convex-svelte';
   import { useCustomer } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
   import { api } from '$lib/convex/_generated/api';
 
@@ -593,7 +587,7 @@ export const send = action({
 ```svelte
 <!-- src/lib/demo/Chat/Chat.svelte - SvelteKit component -->
 <script lang="ts">
-  import { useConvexClient } from '@mmailaender/convex-svelte';
+  import { useConvexClient } from 'convex-svelte';
   import { useCustomer } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
   import { api } from '$lib/convex/_generated/api';
 

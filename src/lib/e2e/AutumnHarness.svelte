@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onDestroy, onMount } from "svelte";
 	import { tick } from "svelte";
-	import { useConvexClient } from "@mmailaender/convex-svelte";
+	import { useConvexClient } from "convex-svelte";
 
 	import { api } from "$lib/convex/_generated/api";
 	import { normalizeCustomer } from "./normalize";

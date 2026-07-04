@@ -28,7 +28,7 @@ vi.mock("svelte", () => ({
 	},
 }));
 
-vi.mock("@mmailaender/convex-svelte", () => ({
+vi.mock("convex-svelte", () => ({
 	useConvexClient: () => testState.convexClient,
 }));
 

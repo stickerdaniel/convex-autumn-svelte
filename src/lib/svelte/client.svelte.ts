@@ -6,7 +6,7 @@
  */
 
 import { getContext, setContext } from "svelte";
-import { useConvexClient } from "@mmailaender/convex-svelte";
+import { useConvexClient } from "convex-svelte";
 
 import type {
 	AutumnConvexApi,

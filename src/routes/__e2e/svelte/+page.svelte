@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from "svelte";
 	import { page } from "$app/state";
-	import { useConvexClient } from "@mmailaender/convex-svelte";
+	import { useConvexClient } from "convex-svelte";
 
 	import AutumnHarness from "$lib/e2e/AutumnHarness.svelte";
 	import { api } from "$lib/convex/_generated/api";

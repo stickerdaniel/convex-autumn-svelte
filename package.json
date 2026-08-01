@@ -1,7 +1,7 @@
 {
 	"name": "@stickerdaniel/convex-autumn-svelte",
 	"author": "Daniel Sticker",
-	"version": "0.3.0",
+	"version": "0.4.0",
 	"description": "Svelte 5 wrapper for Convex Autumn billing - reactive, type-safe, SSR-ready",
 	"license": "MIT",
 	"keywords": [
@@ -62,7 +62,7 @@
 		"test:e2e": "playwright test",
 		"test:e2e:smoke": "playwright test --grep @smoke",
 		"test": "bun run test:contracts && bun run test:unit",
-		"test:contracts": "vitest run tests/contracts",
+		"test:contracts": "tsc --noEmit -p tsconfig.contracts.json && vitest run tests/contracts",
 		"test:unit": "vitest run tests/unit"
 	},
 	"exports": {

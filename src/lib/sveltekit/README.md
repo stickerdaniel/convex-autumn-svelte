@@ -401,7 +401,7 @@ With SSR, your data is available immediately:
 <script lang="ts">
   import { useCustomer } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
 
-  const { customer, checkout } = useCustomer();
+  const { customer, checkout, attach } = useCustomer();
 
   async function upgradeToPro() {
     const result = await checkout({
@@ -412,7 +412,27 @@ With SSR, your data is available immediately:
     // Data will automatically refresh via invalidateAll()
 
     if (result.url) {
+      // Autumn wants the customer on a hosted Stripe page.
       window.location.href = result.url;
+      return;
+    }
+
+    // No URL means the purchase can be completed in place: `result` is a
+    // preview (lines, total, has_prorations, options). Show it, and on
+    // confirmation finish with attach. Skipping this branch is why an upgrade
+    // button can look like it does nothing.
+    const attachResult = await attach({
+      productId: result.product.id,
+      options: result.options.map(({ feature_id, quantity }) => ({
+        featureId: feature_id,
+        quantity
+      })),
+      successUrl: '/dashboard?upgraded=true'
+    });
+
+    if (attachResult.checkout_url) {
+      // The stored payment method could not be charged after all.
+      window.location.href = attachResult.checkout_url;
     }
   }
 
@@ -820,9 +840,9 @@ Hook to access customer data and billing operations.
 - `customer: Customer | null` - Current customer data (reactive, hydrated from SSR)
 - `allowed(params): LocalCheckResult` - Local access check (doesn't consume usage)
 - `check(params, options?): Promise<CheckResult>` - Server-side access check (auto-invalidates)
-- `checkout(params, options?): Promise<{url?: string}>` - Initiate checkout flow (auto-invalidates)
+- `checkout(params, options?): Promise<CheckoutResult>` - Initiate checkout flow; returns a hosted `url` or a preview to confirm with `attach` (auto-invalidates)
 - `track(params, options?): Promise<TrackResult>` - Track usage (auto-invalidates)
-- `attach(params, options?): Promise<void>` - Attach product to customer (auto-invalidates)
+- `attach(params, options?): Promise<AttachResult>` - Attach product to customer; a `checkout_url` on the result means payment is still required (auto-invalidates)
 - `cancel(params, options?): Promise<void>` - Cancel product subscription (auto-invalidates)
 - `openBillingPortal(params): Promise<BillingPortalResult>` - Open Stripe portal
 - `createEntity(params, options?): Promise<Entity>` - Create new entity (auto-invalidates)
@@ -880,9 +900,14 @@ returns: {
 }
 ```
 
-**`checkout(params: CheckoutParams, options?: RefetchOptions): Promise<{url?: string}>`**
+**`checkout(params: CheckoutParams, options?: RefetchOptions): Promise<CheckoutResult>`**
 
 Initiate Stripe checkout flow.
+
+Returns the full `CheckoutResult`. When `url` is set, send the customer there.
+When it is absent (the live API answers `null`), the result is a purchase
+preview: show `lines`, `total` and `has_prorations`, then complete the purchase
+with `attach`, forwarding `options` as `{ featureId, quantity }`.
 
 ```typescript
 params: {
@@ -897,8 +922,17 @@ options: {
   refetch?: boolean;                    // Auto-invalidate (default: true)
 }
 
-returns: {
-  url?: string;                         // Stripe checkout URL
+returns: CheckoutResult {
+  url?: string | null;                  // Hosted Stripe page, absent when the
+                                        // purchase is confirmed in the app
+  product: Product;                     // What is being bought
+  current_product: Product;             // What the customer is on today
+  lines: { description: string; amount: number }[];
+  total: number;
+  currency: string;
+  has_prorations: boolean;
+  options: { feature_id: string; quantity: number }[];
+  next_cycle?: { starts_at: number; total: number };
 }
 ```
 
@@ -923,9 +957,12 @@ returns: {
 }
 ```
 
-**`attach(params: AttachParams, options?: RefetchOptions): Promise<void>`**
+**`attach(params: AttachParams, options?: RefetchOptions): Promise<AttachResult>`**
 
 Attach a product subscription to the customer.
+
+Returns the `AttachResult`. A `checkout_url` on it means the stored payment
+method could not be charged and the customer has to finish on a hosted page.
 
 ```typescript
 params: {

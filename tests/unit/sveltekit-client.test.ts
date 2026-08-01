@@ -4,6 +4,8 @@ import { flushPromises } from "../helpers/flush.js";
 import { mockAutumnApi } from "../helpers/mock-api.js";
 import { createReactiveServerState } from "../helpers/reactive-state.svelte.js";
 import {
+	attachNeedsCheckout,
+	checkoutPreview,
 	entity,
 	eventListResult,
 	freeCustomer,
@@ -131,6 +133,44 @@ describe("sveltekit client wrapper", () => {
 		);
 
 		expect(invalidate).not.toHaveBeenCalled();
+	});
+
+	test("checkout passes the whole preview through when there is no hosted session", async () => {
+		const invalidate = vi.fn().mockResolvedValue(undefined);
+		testState.convexClient.action.mockResolvedValue(ok(checkoutPreview));
+
+		const { setupAutumn } = await importSvelteKitModules();
+		const autumn = setupAutumn({
+			convexApi: mockAutumnApi,
+			getServerState: () => ({ customer: freeCustomer, _timeFetched: Date.now() }),
+			invalidate,
+		});
+
+		// Callers decide between redirecting and confirming, so they need the
+		// preview intact: the product to attach, its prepaid quantities and the
+		// amounts to show. Returning only `url` strands them on a null.
+		await expect(autumn.checkout({ productId: "pro" })).resolves.toEqual(
+			checkoutPreview,
+		);
+	});
+
+	test("attach returns its result so a hosted-payment fallback stays reachable", async () => {
+		const invalidate = vi.fn().mockResolvedValue(undefined);
+		testState.convexClient.action.mockResolvedValue(ok(attachNeedsCheckout));
+
+		const { setupAutumn } = await importSvelteKitModules();
+		const autumn = setupAutumn({
+			convexApi: mockAutumnApi,
+			getServerState: () => ({ customer: freeCustomer, _timeFetched: Date.now() }),
+			invalidate,
+		});
+
+		// Autumn answers with checkout_url when the stored card could not be
+		// charged. Swallowing it leaves the purchase half-finished and silent.
+		await expect(autumn.attach({ productId: "pro" })).resolves.toEqual(
+			attachNeedsCheckout,
+		);
+		expect(invalidate).toHaveBeenCalledWith("autumn:customer");
 	});
 
 	test("listProducts, query, getEntity, usage, listEvents, aggregateEvents, and billingPortal do not invalidate", async () => {

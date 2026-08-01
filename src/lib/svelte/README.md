@@ -287,8 +287,27 @@ For checks that consume usage or need server-side validation:
     });
 
     if (result.url) {
-      // User will be redirected to Stripe checkout
+      // Autumn wants the customer on a hosted Stripe page.
       window.location.href = result.url;
+      return;
+    }
+
+    // No URL means the purchase can be completed in place: `result` is a
+    // preview (lines, total, has_prorations, options). Show it, and on
+    // confirmation finish with attach. Skipping this branch is why an upgrade
+    // button can look like it does nothing.
+    const attachResult = await autumn.attach({
+      productId: result.product.id,
+      options: result.options.map(({ feature_id, quantity }) => ({
+        featureId: feature_id,
+        quantity
+      })),
+      successUrl: '/dashboard?upgraded=true'
+    });
+
+    if (attachResult.checkout_url) {
+      // The stored payment method could not be charged after all.
+      window.location.href = attachResult.checkout_url;
     }
   }
 </script>
@@ -352,8 +371,13 @@ For checks that consume usage or need server-side validation:
   const autumn = useCustomer();
 
   async function attachProduct(productId: string) {
-    await autumn.attach({ productId });
+    const result = await autumn.attach({ productId });
     // Customer data automatically refetched after attach
+
+    if (result.checkout_url) {
+      // Payment is still required: the stored method could not be charged.
+      window.location.href = result.checkout_url;
+    }
   }
 
   async function cancelProduct(productId: string) {
@@ -642,9 +666,9 @@ Hook to access customer data and billing operations.
 - `error: Error | null | undefined` - Error state
 - `allowed(params): LocalCheckResult` - Local access check (doesn't consume usage)
 - `check(params, options?): Promise<CheckResult>` - Server-side access check (auto-refetches customer)
-- `checkout(params, options?): Promise<{url?: string}>` - Initiate checkout flow (auto-refetches customer)
+- `checkout(params, options?): Promise<CheckoutResult>` - Initiate checkout flow; returns a hosted `url` or a preview to confirm with `attach` (auto-refetches customer)
 - `track(params, options?): Promise<TrackResult>` - Track usage (auto-refetches customer)
-- `attach(params, options?): Promise<void>` - Attach product to customer (auto-refetches customer)
+- `attach(params, options?): Promise<AttachResult>` - Attach product to customer; a `checkout_url` on the result means payment is still required (auto-refetches customer)
 - `cancel(params, options?): Promise<void>` - Cancel product subscription (auto-refetches customer)
 - `openBillingPortal(params): Promise<BillingPortalResult>` - Open Stripe portal
 - `createEntity(params, options?): Promise<Entity>` - Create new entity (auto-refetches customer)

@@ -6,6 +6,11 @@
  */
 
 import type { FunctionReference } from "convex/server";
+import type {
+	AttachFeatureOptions as AutumnAttachFeatureOptions,
+	AttachResult as AutumnAttachResult,
+	CheckoutResult as AutumnCheckoutResult,
+} from "autumn-js";
 
 /**
  * Represents a billable feature in Autumn.
@@ -95,6 +100,32 @@ export interface CheckoutParams {
 	successUrl?: string;
 	[key: string]: unknown;
 }
+
+/**
+ * Prepaid feature quantity carried by a checkout preview.
+ */
+export type AttachFeatureOptions = AutumnAttachFeatureOptions;
+
+/**
+ * Result of initiating checkout.
+ *
+ * Autumn declares `url` as `string | undefined`, but the live API answers with
+ * `null` when the purchase can be completed in-app instead of through a hosted
+ * Stripe session. The widened type keeps that case visible: an absent URL is
+ * the documented signal to show the returned preview and confirm it with
+ * `attach`, not an error.
+ */
+export type CheckoutResult = Omit<AutumnCheckoutResult, "url"> & {
+	url?: string | null;
+};
+
+/**
+ * Result of attaching a product.
+ *
+ * `checkout_url` is set when the stored payment method could not be charged
+ * and Autumn wants the customer to complete payment on a hosted page.
+ */
+export type AttachResult = AutumnAttachResult;
 
 /**
  * Parameters for tracking usage.

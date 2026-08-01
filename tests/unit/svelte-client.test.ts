@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { flushPromises } from "../helpers/flush.js";
 import { mockAutumnApi } from "../helpers/mock-api.js";
 import {
+	attachNeedsCheckout,
+	checkoutPreview,
 	entity,
 	eventListResult,
 	fail,
@@ -183,6 +185,41 @@ describe("svelte client wrapper", () => {
 		);
 
 		expect(testState.convexClient.action).toHaveBeenCalledTimes(2);
+	});
+
+	test("checkout passes the whole preview through when there is no hosted session", async () => {
+		testState.convexClient.action
+			.mockResolvedValueOnce(ok(freeCustomer))
+			.mockResolvedValueOnce(ok(checkoutPreview));
+
+		const { setupAutumn } = await importSvelteModules();
+		const autumn = setupAutumn({ convexApi: mockAutumnApi });
+
+		await flushPromises();
+
+		// Callers decide between redirecting and confirming, so they need the
+		// preview intact: the product to attach, its prepaid quantities and the
+		// amounts to show. Returning only `url` strands them on a null.
+		await expect(
+			autumn.checkout({ productId: "pro" }, { refetch: false }),
+		).resolves.toEqual(checkoutPreview);
+	});
+
+	test("attach returns its result so a hosted-payment fallback stays reachable", async () => {
+		testState.convexClient.action
+			.mockResolvedValueOnce(ok(freeCustomer))
+			.mockResolvedValueOnce(ok(attachNeedsCheckout));
+
+		const { setupAutumn } = await importSvelteModules();
+		const autumn = setupAutumn({ convexApi: mockAutumnApi });
+
+		await flushPromises();
+
+		// Autumn answers with checkout_url when the stored card could not be
+		// charged. Swallowing it leaves the purchase half-finished and silent.
+		await expect(
+			autumn.attach({ productId: "pro" }, { refetch: false }),
+		).resolves.toEqual(attachNeedsCheckout);
 	});
 
 	test("listProducts, query, getEntity, usage, listEvents, and aggregateEvents do not refetch customer", async () => {

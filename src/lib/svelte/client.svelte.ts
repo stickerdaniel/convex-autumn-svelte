@@ -17,9 +17,11 @@ import type {
 	CheckParams,
 	CheckResult,
 	CheckoutParams,
+	CheckoutResult,
 	TrackParams,
 	TrackResult,
 	AttachParams,
+	AttachResult,
 	CancelParams,
 	BillingPortalParams,
 	BillingPortalResult,
@@ -158,16 +160,17 @@ export function createAutumnClient({
 	 *
 	 * @param params - Checkout parameters including productId and optional dialog handler
 	 * @param options - Options controlling data refetch behavior
-	 * @returns Promise resolving to checkout result with optional URL
+	 * @returns Promise resolving to the checkout result: a hosted Stripe `url`,
+	 *   or a purchase preview to confirm with `attach` when `url` is absent
 	 */
 	const checkout = async (
 		params: CheckoutParams,
 		options: RefetchOptions = {},
-	): Promise<{ url?: string }> => {
+	): Promise<CheckoutResult> => {
 		const { refetch = true } = options;
 
 		const result = await client.action(convexApi.checkout, params);
-		const data = unwrapAutumnResponse<{ url?: string }>(result);
+		const data = unwrapAutumnResponse<CheckoutResult>(result);
 
 		if (params.dialog && data.url) {
 			if (isBrowser) {
@@ -210,20 +213,23 @@ export function createAutumnClient({
 	 *
 	 * @param params - Attach parameters including productId
 	 * @param options - Options controlling data refetch behavior
-	 * @returns Promise that resolves when attachment completes
+	 * @returns Promise resolving to the attach result, including `checkout_url`
+	 *   when the stored payment method could not be charged
 	 */
 	const attach = async (
 		params: AttachParams,
 		options: RefetchOptions = {},
-	): Promise<void> => {
+	): Promise<AttachResult> => {
 		const { refetch = true } = options;
 
 		const result = await client.action(convexApi.attach, params);
-		unwrapAutumnResponse<void>(result);
+		const data = unwrapAutumnResponse<AttachResult>(result);
 
 		if (refetch) {
 			await fetchCustomer();
 		}
+
+		return data;
 	};
 
 	/**

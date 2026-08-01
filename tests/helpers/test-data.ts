@@ -1,5 +1,9 @@
+import { AppEnv } from "autumn-js";
+
 import type {
+	AttachResult,
 	AutumnActionResponse,
+	CheckoutResult,
 	Customer,
 	Entity,
 	EventListResult,
@@ -77,6 +81,55 @@ export const eventListResult: EventListResult = {
 	offset: 0,
 	limit: 10,
 	total: 1,
+};
+
+const autumnProduct = (id: string, name: string) => ({
+	id,
+	name,
+	created_at: 1_735_689_600_000,
+	env: AppEnv.Sandbox,
+	is_add_on: false,
+	is_default: id === "free",
+	group: "main",
+	version: 1,
+	items: [],
+	free_trial: null,
+	base_variant_id: null,
+	properties: {
+		is_free: id === "free",
+		is_one_off: false,
+		interval_group: "month",
+		has_trial: false,
+		updateable: true,
+	},
+});
+
+/**
+ * A checkout answer that carries no hosted Stripe session.
+ *
+ * The live API returns `url: null` here, which Autumn's own declaration does
+ * not model. Consumers have to read the preview and confirm it with `attach`,
+ * so this pins the shape the wrapper must pass through untouched.
+ */
+export const checkoutPreview: CheckoutResult = {
+	url: null,
+	customer_id: "customer_free",
+	has_prorations: false,
+	lines: [{ description: "Pro - $10 / month", amount: 10, item: {} }],
+	total: 10,
+	currency: "usd",
+	options: [{ feature_id: "seats", quantity: 3 }],
+	product: autumnProduct("pro", "Pro"),
+	current_product: autumnProduct("free", "Free"),
+};
+
+/** An attach answer that still needs a hosted page to collect payment. */
+export const attachNeedsCheckout: AttachResult = {
+	customer_id: "customer_free",
+	product_ids: ["pro"],
+	code: "checkout_created",
+	message: "Payment required",
+	checkout_url: "https://checkout.test/attach",
 };
 
 export function ok<T>(data: T): AutumnActionResponse<T> {

@@ -2,12 +2,20 @@ import { describe, expect, test } from "vitest";
 
 import { api } from "../../src/lib/convex/_generated/api.js";
 import type {
+	AttachResult as UpstreamAttachResult,
+	CheckoutResult as UpstreamCheckoutResult,
+} from "autumn-js";
+import type { createAutumnClient } from "../../src/lib/svelte/client.svelte.js";
+import type { createAutumnClientSvelteKit } from "../../src/lib/sveltekit/client.svelte.js";
+import type {
 	AttachParams,
+	AttachResult,
 	AutumnConvexApi,
 	BillingPortalParams,
 	CancelParams,
 	CheckParams,
 	CheckoutParams,
+	CheckoutResult,
 	CreateEntityParams,
 	CreateReferralCodeParams,
 	EventAggregateParams,
@@ -74,6 +82,39 @@ type _redeemReferralCodeParamsMatch = ExpectExtends<
 >;
 type _setUsageParamsMatch = ExpectExtends<SetUsageParams, UsageArgsType>;
 type _queryParamsMatch = ExpectExtends<QueryParams, QueryArgsType>;
+
+// Result contracts. Both results are handed back untouched, so the exported
+// types have to keep matching upstream's. The one deliberate deviation is
+// `CheckoutResult.url`: upstream declares it `string | undefined` while the
+// live API answers `null` for a purchase that needs in-app confirmation, so
+// the wrapper widens exactly that field.
+type _checkoutResultKeepsUpstreamShape = ExpectExtends<
+	Omit<CheckoutResult, "url">,
+	Omit<UpstreamCheckoutResult, "url">
+>;
+type _checkoutResultAllowsLiveNull = ExpectExtends<null, CheckoutResult["url"]>;
+type _attachResultMatchesUpstream = ExpectExtends<
+	AttachResult,
+	UpstreamAttachResult
+>;
+
+// The methods must surface those results rather than a narrowed stand-in.
+type _svelteCheckoutReturns = ExpectExtends<
+	Awaited<ReturnType<ReturnType<typeof createAutumnClient>["checkout"]>>,
+	CheckoutResult
+>;
+type _svelteAttachReturns = ExpectExtends<
+	Awaited<ReturnType<ReturnType<typeof createAutumnClient>["attach"]>>,
+	AttachResult
+>;
+type _svelteKitCheckoutReturns = ExpectExtends<
+	Awaited<ReturnType<ReturnType<typeof createAutumnClientSvelteKit>["checkout"]>>,
+	CheckoutResult
+>;
+type _svelteKitAttachReturns = ExpectExtends<
+	Awaited<ReturnType<ReturnType<typeof createAutumnClientSvelteKit>["attach"]>>,
+	AttachResult
+>;
 
 describe("upstream type contract", () => {
 	test("generated api.autumn remains assignable to AutumnConvexApi", () => {

@@ -96,9 +96,9 @@ export function setupAutumn({
  * @returns {Customer | null} customer - Customer data (pre-loaded via SSR, null if not found)
  * @returns {function(CheckParams): LocalCheckResult} allowed - Local check for feature access without consuming usage
  * @returns {function(CheckParams): Promise<CheckResult>} check - Server-side check with usage tracking (auto-invalidates)
- * @returns {function(CheckoutParams): Promise<{url?: string}>} checkout - Initiate checkout for a product (auto-invalidates)
+ * @returns {function(CheckoutParams): Promise<CheckoutResult>} checkout - Initiate checkout; returns a hosted url or a preview to confirm with attach (auto-invalidates)
  * @returns {function(TrackParams): Promise<TrackResult>} track - Track usage of a feature (auto-invalidates)
- * @returns {function(AttachParams): Promise<void>} attach - Attach a product to the customer (auto-invalidates)
+ * @returns {function(AttachParams): Promise<AttachResult>} attach - Attach a product to the customer (auto-invalidates)
  * @returns {function(CancelParams): Promise<void>} cancel - Cancel a product subscription (auto-invalidates)
  * @returns {function(BillingPortalParams): Promise<BillingPortalResult>} openBillingPortal - Open Stripe billing portal
  * @returns {function(CreateEntityParams): Promise<Entity>} createEntity - Create a new entity (auto-invalidates)
@@ -271,9 +271,12 @@ export type {
 	CheckParams,
 	CheckResult,
 	CheckoutParams,
+	CheckoutResult,
 	TrackParams,
 	TrackResult,
 	AttachParams,
+	AttachResult,
+	AttachFeatureOptions,
 	CancelParams,
 	BillingPortalParams,
 	BillingPortalResult,

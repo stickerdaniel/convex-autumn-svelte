@@ -1,0 +1,15 @@
+{
+	// The type-level contracts in tests/contracts only mean something if a type
+	// checker actually runs over them. `bun run check` uses svelte-check with
+	// --no-tsconfig, which by design ignores JS/TS files, and Vitest strips
+	// types while transforming. Without this scoped pass, a return type could
+	// silently regress and every job would stay green.
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"declaration": false,
+		"declarationMap": false,
+		"sourceMap": false
+	},
+	"include": ["tests/contracts/**/*.ts", "src/lib/svelte/**/*.ts", "src/lib/sveltekit/**/*.ts"]
+}

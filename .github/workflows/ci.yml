@@ -2,8 +2,17 @@ name: CI
 
 on:
   push:
+    branches-ignore: [main]
   pull_request:
   workflow_dispatch:
+  workflow_call:
+    outputs:
+      sha256:
+        description: SHA-256 of the consumer-tested tarball
+        value: ${{ jobs.test.outputs.sha256 }}
+      version:
+        description: Package version in the tested tarball
+        value: ${{ jobs.test.outputs.version }}
 
 permissions:
   contents: read
@@ -59,115 +68,3 @@ jobs:
           path: ${{ steps.consumers.outputs.tarball }}
           if-no-files-found: error
           retention-days: 30
-
-  release-gate:
-    name: Check npm release
-    needs: test
-    if: >-
-      github.repository == 'stickerdaniel/convex-autumn-svelte' &&
-      github.ref == 'refs/heads/main' &&
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    outputs:
-      publish: ${{ steps.gate.outputs.publish }}
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: npm-package-${{ github.sha }}
-          path: ${{ runner.temp }}/npm-release
-
-      - name: Verify package and check npm
-        id: gate
-        env:
-          RELEASE_DIR: ${{ runner.temp }}/npm-release
-          VERSION: ${{ needs.test.outputs.version }}
-          SHA256: ${{ needs.test.outputs.sha256 }}
-        run: |
-          set -euo pipefail
-          fail() { echo "::error::$1"; exit 1; }
-          tarball="$RELEASE_DIR/package.tgz"
-          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "Expected a stable release version."
-          [ "$(sha256sum "$tarball" | cut -d' ' -f1)" = "$SHA256" ] || fail "Tarball differs from the consumer-tested artifact."
-          manifest="$(tar -xOf "$tarball" package/package.json)"
-          [ "$(jq -r .name <<<"$manifest")" = '@stickerdaniel/convex-autumn-svelte' ] || fail "Unexpected package name."
-          [ "$(jq -r .version <<<"$manifest")" = "$VERSION" ] || fail "Tarball version differs from the tested source."
-          jq -e '.publishConfig == {"access":"public"}' <<<"$manifest" > /dev/null || fail "Unexpected publishConfig."
-
-          status="$(curl --silent --show-error --retry 3 --max-time 30 \
-            --output "$RELEASE_DIR/registry.json" --write-out '%{http_code}' \
-            "https://registry.npmjs.org/@stickerdaniel%2fconvex-autumn-svelte/$VERSION")"
-          case "$status" in
-            200)
-              [ "$(jq -r .version "$RELEASE_DIR/registry.json")" = "$VERSION" ] || fail "npm returned an unexpected version."
-              echo "publish=false" >> "$GITHUB_OUTPUT"
-              echo "Version $VERSION is already published."
-              ;;
-            404)
-              echo "publish=true" >> "$GITHUB_OUTPUT"
-              echo "Version $VERSION is ready for live verification."
-              ;;
-            *)
-              echo "::error::npm lookup failed with HTTP $status."
-              exit 1
-              ;;
-          esac
-
-  release-e2e:
-    name: Verify release billing flows
-    needs: release-gate
-    if: needs.release-gate.outputs.publish == 'true'
-    uses: ./.github/workflows/live-autumn.yml
-    with:
-      preview_name: release
-    secrets: inherit
-
-  publish:
-    name: Publish to npm
-    needs: [test, release-gate, release-e2e]
-    if: >-
-      github.repository == 'stickerdaniel/convex-autumn-svelte' &&
-      github.ref == 'refs/heads/main' &&
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
-      needs.release-gate.outputs.publish == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    concurrency:
-      group: convex-autumn-svelte-npm-release
-      cancel-in-progress: false
-    environment:
-      name: npm
-      url: https://www.npmjs.com/package/@stickerdaniel/convex-autumn-svelte/v/${{ needs.test.outputs.version }}
-    permissions:
-      id-token: write
-    steps:
-      # This job has the publishing identity. It runs no repository code.
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24.18.0
-          registry-url: https://registry.npmjs.org
-
-      - name: Require npm trusted publishing support
-        run: |
-          set -euo pipefail
-          printf '11.5.1\n%s\n' "$(npm --version)" | sort -V -C
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: npm-package-${{ github.sha }}
-          path: ${{ runner.temp }}/npm-release
-
-      - name: Publish the tested package
-        env:
-          RELEASE_DIR: ${{ runner.temp }}/npm-release
-          VERSION: ${{ needs.test.outputs.version }}
-          SHA256: ${{ needs.test.outputs.sha256 }}
-        run: |
-          set -euo pipefail
-          tarball="$RELEASE_DIR/package.tgz"
-          if [ "$(sha256sum "$tarball" | cut -d' ' -f1)" != "$SHA256" ]; then
-            echo "::error::Tarball differs from the consumer-tested artifact."
-            exit 1
-          fi
-          npm publish "$tarball" --access public --ignore-scripts --registry https://registry.npmjs.org/
-          echo "Published @stickerdaniel/convex-autumn-svelte@$VERSION" >> "$GITHUB_STEP_SUMMARY"

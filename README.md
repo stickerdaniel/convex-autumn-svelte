@@ -68,12 +68,12 @@ See [AGENTS.md](./AGENTS.md) for project conventions and the Convex
 dashboard env vars CI relies on.
 
 To release, bump the stable version in `package.json` in a reviewed PR. After it
-merges to `main`, CI checks the package, verifies the installed tarball in both Kit
-versions, and runs live billing tests before publishing that same tarball to npm.
-Existing versions are skipped. Run CI manually on `main` to retry a release.
+merges to `main`, the Release workflow runs CI to check the package and its installed
+Kit 2/3 consumers, then runs live billing tests before publishing the same tarball
+to npm. Existing versions are skipped. Run Release manually on `main` to retry.
 
 Publishing uses npm trusted publishing for `stickerdaniel/convex-autumn-svelte`,
-workflow `ci.yml`, and GitHub environment `npm`. No npm token is stored in GitHub.
+workflow `release.yml`, and GitHub environment `npm`. No npm token is stored in GitHub.
 
 ## License
 

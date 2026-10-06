@@ -26,7 +26,7 @@ on:
       - '.github/workflows/live-autumn.yml'
 
 concurrency:
-  group: live-e2e-${{ github.event.pull_request.number || github.ref }}
+  group: live-e2e-${{ inputs.preview_name || github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:

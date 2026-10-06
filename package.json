@@ -88,7 +88,7 @@
 	},
 	"devDependencies": {
 		"@convex-dev/auth": "0.0.90",
-		"@mmailaender/convex-auth-svelte": "0.1.3",
+		"@mmailaender/convex-auth-svelte": "0.1.4",
 		"@playwright/test": "1.58.2",
 		"@skeletonlabs/skeleton": "4.13.0",
 		"@skeletonlabs/skeleton-svelte": "4.13.0",
@@ -128,9 +128,9 @@
 		"@useautumn/convex": "^0.0.23",
 		"atmn": "^0.0.36",
 		"autumn-js": "^0.1.82",
-		"cookie": "^1.0.2",
-		"is-network-error": "^1.1.0",
+		"cookie": "^1.1.1",
+		"is-network-error": "^1.3.2",
 		"jwt-decode": "^4.0.0",
-		"path-to-regexp": "^8.2.0"
+		"path-to-regexp": "^8.4.2"
 	}
 }

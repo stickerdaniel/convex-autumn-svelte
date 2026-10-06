@@ -1,3 +1,7 @@
+## Pull requests
+
+- End every PR body with `Generated with <model> for <job> in <tool> via <host>.` CI requires that line, including the period. For example, `Generated with Claude Opus 5.5 for implementation in Claude Code via T3 Code.` For several models, write `Generated with <model 1> for <job 1> and <model 2> for <job 2> in <tool> via <host>.` Every model needs a job. Commas or `/` list several jobs for one model.
+
 This project is a Svelte 5 reactive wrapper for Convex Autumn billing. It provides type-safe, reactive billing and subscription management for Svelte applications using Svelte 5 runes and best practices.
 
 **Convex dashboard:** [Default Environment Variables](https://dashboard.convex.dev/t/daniel-sticker-name/convex-autumn-svelte/settings#env-vars) — set under the **Preview** scope so each `convex deploy --preview-create` deployment in CI inherits them: `ENABLE_E2E_HARNESS=1`, `AUTUMN_SECRET_KEY`, `AUTH_E2E_TEST_SECRET_PRIMARY`, `AUTH_E2E_TEST_SECRET_SECONDARY`, `JWT_PRIVATE_KEY`, `JWKS`, plus any auth provider secrets exercised by E2E.

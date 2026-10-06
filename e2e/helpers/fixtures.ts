@@ -7,6 +7,14 @@ export async function readJson(page: Page, testId: string) {
 	return content ? JSON.parse(content) : null;
 }
 
+export async function waitForOperation(page: Page, name: string) {
+	await expect
+		.poll(async () => await readJson(page, `after-${name}`), { timeout: 20_000 })
+		.not.toBeNull();
+	expect((await readJson(page, "operation-errors"))?.[name]).toBeNull();
+	return await readJson(page, `result-${name}`);
+}
+
 export async function openHarness(
 	page: Page,
 	route: string,
@@ -42,6 +50,7 @@ export async function resetHarnessState(
 ) {
 	await openHarness(page, route, secret);
 	await page.getByTestId("run-reset").click();
+	await waitForOperation(page, "reset");
 
 	await expect
 		.poll(

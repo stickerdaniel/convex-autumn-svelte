@@ -15,7 +15,7 @@
 	// Initialize auth after Convex client is available in context.
 	setupConvexAuth({
 		getServerState: () => data.authState,
-		options: { verbose: true }
+		options: { verbose: false }
 	});
 
 	// Initialize Autumn billing after Convex client is available in context.

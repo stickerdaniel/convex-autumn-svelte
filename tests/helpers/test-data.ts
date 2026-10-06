@@ -4,11 +4,13 @@ import type {
 	AttachResult,
 	AutumnActionResponse,
 	CheckoutResult,
+	CreateReferralCodeResult,
 	Customer,
 	Entity,
 	EventListResult,
 	Product,
 	QueryResult,
+	RedeemReferralCodeResult,
 } from "../../src/lib/svelte/types.js";
 
 export const freeCustomer: Customer = {
@@ -61,9 +63,20 @@ export const products: Product[] = [
 ];
 
 export const queryResult: QueryResult = {
-	data: {
-		list: [{ ts: 1, value: 1 }],
-	},
+	list: [{ period: 1_735_689_600_000, messages: 1 }],
+};
+
+export const referralCode: CreateReferralCodeResult = {
+	code: "REF",
+	customer_id: "customer_free",
+	created_at: 1_735_689_600_000,
+};
+
+export const referralRedemption: RedeemReferralCodeResult = {
+	id: "rr_1",
+	customer_id: "customer_secondary",
+	reward_id: "referral-discount",
+	referrer: { id: "customer_free", name: null, email: "secret@secret.com" },
 };
 
 export const eventListResult: EventListResult = {

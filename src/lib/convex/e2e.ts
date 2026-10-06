@@ -1,5 +1,6 @@
 import { action } from "./_generated/server";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { autumn } from "./autumn";
 
 function assertHarnessEnabled() {
@@ -29,6 +30,20 @@ export const resetCurrentUser = action({
 	args: {},
 	handler: async (ctx): Promise<unknown> => {
 		assertHarnessEnabled();
+
+		const userId = await getAuthUserId(ctx);
+		const secondary = await ctx.runQuery(internal.tests.getSecondaryTestUser);
+		if (userId && userId === secondary?._id) {
+			if (!process.env.AUTUMN_SECRET_KEY?.startsWith("am_sk_test_")) {
+				throw new Error("Referral customer reset requires the Autumn sandbox.");
+			}
+			// Referral redemption is one-time per customer and program. Recreate
+			// only the dedicated secondary sandbox customer so reruns stay isolated.
+			unwrap(await autumn.customers.delete(ctx));
+			unwrap(
+				await ctx.runAction(api.autumn.createCustomer, { errorOnNotFound: false }),
+			);
+		}
 
 		await ctx.runAction(api.autumn.usage as any, {
 			featureId: "messages",

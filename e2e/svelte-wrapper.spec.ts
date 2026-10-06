@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { openHarness, readJson, resetPrimaryUser } from "./helpers/fixtures";
+import { openHarness, readJson, resetPrimaryUser, waitForOperation } from "./helpers/fixtures";
 
 test.describe.configure({ mode: "serial" });
 
@@ -38,9 +38,10 @@ test.describe("vanilla svelte wrapper harness", () => {
 		]);
 
 		await page.getByTestId("run-query").click();
-		await expect
-			.poll(async () => (await readJson(page, "result-query"))?.data?.list?.length ?? 0)
-			.toBeGreaterThanOrEqual(0);
+		const query = await waitForOperation(page, "query");
+		expect(query.list).toEqual(expect.arrayContaining([
+			expect.objectContaining({ period: expect.any(Number), messages: expect.any(Number) }),
+		]));
 
 		await page.getByTestId("run-check").click();
 		await expect
@@ -59,6 +60,9 @@ test.describe("vanilla svelte wrapper harness", () => {
 			.toBe((beforeTrack.messages?.usage ?? 0) + 1);
 
 		await page.getByTestId("run-usage").click();
+		await waitForOperation(page, "usage");
+		// usage deliberately leaves the client cache unchanged until it is refreshed.
+		await page.reload();
 
 		await expect
 			.poll(async () => (await readJson(page, "customer-current"))?.messages?.usage)
@@ -79,8 +83,9 @@ test.describe("vanilla svelte wrapper harness", () => {
 			.toBeGreaterThanOrEqual(1);
 
 		await page.getByTestId("run-aggregateEvents").click();
-		await expect
-			.poll(async () => (await readJson(page, "result-aggregateEvents"))?.data)
-			.toBeTruthy();
+		const aggregate = await waitForOperation(page, "aggregateEvents");
+		expect(aggregate.list).toEqual(expect.arrayContaining([
+			expect.objectContaining({ period: expect.any(Number), messages: expect.any(Number) }),
+		]));
 	});
 });

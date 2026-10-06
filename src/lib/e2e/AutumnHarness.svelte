@@ -11,7 +11,7 @@
 		allowed(params: { featureId: string; requiredBalance?: number }): unknown;
 		check(params: { featureId: string }, options?: { refetch?: boolean }): Promise<unknown>;
 		checkout(
-			params: { productId: string; dialog?: (url: string) => void; successUrl?: string },
+			params: { productId: string; dialog?: (url: string) => void; successUrl?: string; forceCheckout?: boolean },
 			options?: { refetch?: boolean },
 		): Promise<unknown>;
 		track(
@@ -19,7 +19,7 @@
 			options?: { refetch?: boolean },
 		): Promise<unknown>;
 		attach(
-			params: { productId: string },
+			params: { productId: string; successUrl?: string },
 			options?: { refetch?: boolean },
 		): Promise<unknown>;
 		cancel(
@@ -175,7 +175,7 @@
 
 	async function handleAttach() {
 		await runOperation("attach", async () =>
-			await autumn.attach({ productId: "pro" }),
+			await autumn.attach({ productId: "pro", successUrl: window.location.href }),
 		);
 	}
 
@@ -244,6 +244,7 @@
 		await runOperation("checkout", async () => {
 			const result = (await autumn.checkout({
 				productId: "pro",
+				forceCheckout: true,
 				successUrl: `${window.location.origin}/__e2e/${mode}`,
 				dialog: captureRedirects
 					? (url: string) => {

@@ -103,10 +103,10 @@
 		redeemError = null;
 		redeemResult = null;
 		try {
-			const result = await autumn.redeemReferralCode({ code: redeemCode });
+			await autumn.redeemReferralCode({ code: redeemCode });
 			redeemResult = {
-				success: result.success,
-				message: result.success ? 'Referral code redeemed successfully!' : 'Failed to redeem code'
+				success: true,
+				message: 'Referral code redeemed successfully!'
 			};
 		} catch (error) {
 			console.error('Redeem code failed:', error);

@@ -168,13 +168,14 @@ export function createAutumnClient({
 		options: RefetchOptions = {},
 	): Promise<CheckoutResult> => {
 		const { refetch = true } = options;
+		const { dialog, ...args } = params;
 
-		const result = await client.action(convexApi.checkout, params);
+		const result = await client.action(convexApi.checkout, args);
 		const data = unwrapAutumnResponse<CheckoutResult>(result);
 
-		if (params.dialog && data.url) {
+		if (dialog && data.url) {
 			if (isBrowser) {
-				params.dialog(data.url);
+				dialog(data.url);
 			}
 		}
 

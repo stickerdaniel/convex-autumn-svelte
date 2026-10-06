@@ -4,6 +4,9 @@ import dotenv from "dotenv";
 dotenv.config({ path: '.env.local' });
 
 export default defineConfig({
+	// Every suite mutates the same two sandbox customers.
+	workers: 1,
+	timeout: 60_000,
 	retries: process.env.CI ? 1 : 0,
 	use: {
 		baseURL: "http://127.0.0.1:4173",

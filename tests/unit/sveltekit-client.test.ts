@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { convexToJson } from "convex/values";
 
 import { flushPromises } from "../helpers/flush.js";
 import { mockAutumnApi } from "../helpers/mock-api.js";
@@ -13,6 +14,8 @@ import {
 	products,
 	proCustomer,
 	queryResult,
+	referralCode,
+	referralRedemption,
 } from "../helpers/test-data.js";
 
 const testState = vi.hoisted(() => ({
@@ -81,8 +84,8 @@ describe("sveltekit client wrapper", () => {
 			ok(entity),
 		],
 		["setupPayment", {}, ok({ url: "https://billing.test/setup" })],
-		["createReferralCode", { programId: "default" }, ok({ code: "REF", program_id: "default" })],
-		["redeemReferralCode", { code: "REF" }, ok({ success: true })],
+		["createReferralCode", { programId: "default" }, ok(referralCode)],
+		["redeemReferralCode", { code: "REF" }, ok(referralRedemption)],
 	])("%s invalidates once by default", async (method, params, response) => {
 		const invalidate = vi.fn().mockResolvedValue(undefined);
 		testState.convexClient.action.mockResolvedValue(response);
@@ -114,8 +117,8 @@ describe("sveltekit client wrapper", () => {
 			ok(entity),
 		],
 		["setupPayment", {}, ok({ url: "https://billing.test/setup" })],
-		["createReferralCode", { programId: "default" }, ok({ code: "REF", program_id: "default" })],
-		["redeemReferralCode", { code: "REF" }, ok({ success: true })],
+		["createReferralCode", { programId: "default" }, ok(referralCode)],
+		["redeemReferralCode", { code: "REF" }, ok(referralRedemption)],
 	])("%s skips invalidation when refetch is false", async (method, params, response) => {
 		const invalidate = vi.fn().mockResolvedValue(undefined);
 		testState.convexClient.action.mockResolvedValue(response);
@@ -200,6 +203,8 @@ describe("sveltekit client wrapper", () => {
 		await expect(autumn.listProducts()).resolves.toEqual(products);
 		await expect(autumn.query({ featureId: "messages" })).resolves.toEqual(
 			queryResult,
+	referralCode,
+	referralRedemption,
 		);
 		await expect(autumn.getEntity({ entityId: entity.id })).resolves.toEqual(entity);
 		await expect(
@@ -245,7 +250,12 @@ describe("sveltekit client wrapper", () => {
 			location: { href: "https://app.test/original" },
 		});
 
-		testState.convexClient.action.mockResolvedValue(ok({ url: "https://checkout.test" }));
+		testState.convexClient.action.mockImplementation(
+			(_reference: unknown, args: Parameters<typeof convexToJson>[0]) => {
+				convexToJson(args);
+				return ok({ url: "https://checkout.test" });
+			},
+		);
 
 		const { setupAutumn } = await importSvelteKitModules();
 		const autumn = setupAutumn({

@@ -2,17 +2,38 @@ name: CI
 
 on:
   push:
+    branches-ignore: [main]
   pull_request:
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      sha256:
+        description: SHA-256 of the consumer-tested tarball
+        value: ${{ jobs.test.outputs.sha256 }}
+      version:
+        description: Package version in the tested tarball
+        value: ${{ jobs.test.outputs.version }}
+
+permissions:
+  contents: read
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      sha256: ${{ steps.consumers.outputs.sha256 }}
+      version: ${{ steps.consumers.outputs.version }}
     env:
-      ENABLE_E2E_HARNESS: "1"
-      PUBLIC_E2E_TEST: "1"
-      PUBLIC_CONVEX_URL: "https://placeholder.convex.cloud"
+      ENABLE_E2E_HARNESS: '1'
+      PUBLIC_E2E_TEST: '1'
+      PUBLIC_CONVEX_URL: 'https://placeholder.convex.cloud'
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -29,3 +50,21 @@ jobs:
 
       - name: Unit tests
         run: bun run test:unit
+
+      - name: Package
+        run: bun run package
+
+      - name: Production build
+        run: bun run build
+
+      - name: SvelteKit 2 and 3 consumers
+        id: consumers
+        run: node scripts/check-consumers.mjs
+
+      - name: Save the tested npm package
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-package-${{ github.sha }}
+          path: ${{ steps.consumers.outputs.tarball }}
+          if-no-files-found: error
+          retention-days: 30

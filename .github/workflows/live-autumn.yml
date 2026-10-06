@@ -2,24 +2,31 @@ name: Live Autumn
 
 on:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      preview_name:
+        type: string
+        required: false
+        default: ''
   schedule:
-    - cron: "0 4 * * *"
+    - cron: '0 4 * * *'
   pull_request:
     paths:
-      - "src/**"
-      - "e2e/**"
-      - "tests/**"
-      - "playwright.config.ts"
-      - "package.json"
-      - "bun.lock"
-      - "convex.json"
-      - "vite.config.ts"
-      - "svelte.config.js"
-      - "autumn.config.ts"
-      - ".github/workflows/live-autumn.yml"
+      - 'src/**'
+      - 'e2e/**'
+      - 'tests/**'
+      - 'playwright.config.ts'
+      - 'package.json'
+      - 'bun.lock'
+      - 'convex.json'
+      - 'vite.config.ts'
+      - 'svelte.config.js'
+      - 'tsconfig.json'
+      - 'autumn.config.ts'
+      - '.github/workflows/live-autumn.yml'
 
 concurrency:
-  group: live-e2e-${{ github.event.pull_request.number || github.ref }}
+  group: live-e2e-${{ inputs.preview_name || github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -30,14 +37,18 @@ jobs:
        !endsWith(github.actor, '[bot]'))
     runs-on: ubuntu-latest
     env:
-      ENABLE_E2E_HARNESS: "1"
-      PUBLIC_E2E_TEST: "1"
+      ENABLE_E2E_HARNESS: '1'
+      PUBLIC_E2E_TEST: '1'
       AUTH_E2E_TEST_SECRET_PRIMARY: ${{ secrets.AUTH_E2E_TEST_SECRET_PRIMARY }}
       AUTH_E2E_TEST_SECRET_SECONDARY: ${{ secrets.AUTH_E2E_TEST_SECRET_SECONDARY }}
       AUTUMN_REFERRAL_PROGRAM_ID: ${{ vars.AUTUMN_REFERRAL_PROGRAM_ID || 'default' }}
       CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -50,8 +61,12 @@ jobs:
         run: bunx playwright install --with-deps chromium
 
       - name: Compute preview deployment name
+        env:
+          RELEASE_PREVIEW_NAME: ${{ inputs.preview_name }}
         run: |
-          if [ -n "${{ github.event.pull_request.number }}" ]; then
+          if [ -n "$RELEASE_PREVIEW_NAME" ]; then
+            echo "PREVIEW_NAME=$RELEASE_PREVIEW_NAME" >> "$GITHUB_ENV"
+          elif [ -n "${{ github.event.pull_request.number }}" ]; then
             echo "PREVIEW_NAME=pr-${{ github.event.pull_request.number }}" >> "$GITHUB_ENV"
           elif [ "${{ github.event_name }}" = "schedule" ]; then
             echo "PREVIEW_NAME=nightly" >> "$GITHUB_ENV"
@@ -61,6 +76,8 @@ jobs:
 
       - name: Deploy preview, seed test users, capture URL
         run: |
+          # Convex supplies PUBLIC_CONVEX_URL to this child command.
+          # shellcheck disable=SC2016
           bunx convex deploy \
             --preview-create "$PREVIEW_NAME" \
             --preview-run tests:init \

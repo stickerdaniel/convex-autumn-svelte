@@ -10,6 +10,9 @@ import type {
 	AttachFeatureOptions as AutumnAttachFeatureOptions,
 	AttachResult as AutumnAttachResult,
 	CheckoutResult as AutumnCheckoutResult,
+	CreateReferralCodeResult as AutumnCreateReferralCodeResult,
+	QueryResult as AutumnQueryResult,
+	RedeemReferralCodeResult as AutumnRedeemReferralCodeResult,
 } from "autumn-js";
 
 /**
@@ -223,10 +226,7 @@ export interface CreateReferralCodeParams {
 /**
  * Result of creating a referral code.
  */
-export interface CreateReferralCodeResult {
-	code: string;
-	program_id: string;
-}
+export type CreateReferralCodeResult = AutumnCreateReferralCodeResult;
 
 /**
  * Parameters for redeeming a referral code.
@@ -239,10 +239,7 @@ export interface RedeemReferralCodeParams {
 /**
  * Result of redeeming a referral code.
  */
-export interface RedeemReferralCodeResult {
-	success: boolean;
-	reward?: unknown;
-}
+export type RedeemReferralCodeResult = AutumnRedeemReferralCodeResult;
 
 /**
  * Parameters for setting usage to an absolute value.
@@ -294,9 +291,7 @@ export interface QueryParams {
 /**
  * Result of querying customer data.
  */
-export interface QueryResult {
-	data: Record<string, unknown>;
-}
+export type QueryResult = AutumnQueryResult;
 
 /**
  * Event record returned from Autumn analytics endpoints.

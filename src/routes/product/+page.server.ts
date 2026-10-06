@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
-import { api } from '$lib/convex/_generated/api.js';
-import { authHandlers } from '$lib/server/convex-auth';
+import { api } from '#lib/convex/_generated/api.js';
+import { authHandlers } from '#lib/server/convex-auth.ts';
 
 /**
  * Loads authenticated user and message data for the product page.

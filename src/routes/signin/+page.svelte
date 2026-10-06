@@ -2,7 +2,7 @@
 	import { useAuth } from '@mmailaender/convex-auth-svelte/sveltekit';
 	import { goto } from '$app/navigation';
 
-	import { env } from '$env/dynamic/public';
+	import { PUBLIC_E2E_TEST } from '$app/env/public';
 
 	const { signIn } = useAuth();
 
@@ -17,7 +17,7 @@
 		<button class="btn preset-filled" onclick={handleGitHubSignIn}>
 			Sign In with GitHub
 		</button>
-		{#if env.PUBLIC_E2E_TEST}
+		{#if PUBLIC_E2E_TEST}
 			<form
 				class="mt-8 flex flex-col gap-2"
 				onsubmit={(event) => {

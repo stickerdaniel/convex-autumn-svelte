@@ -1,6 +1,6 @@
 # Autumn SvelteKit
 
-Reactive SvelteKit bindings for [Autumn](https://useautumn.com) billing with [Convex](https://convex.dev), featuring full SSR support.
+Reactive SvelteKit 2 and 3 bindings for [Autumn](https://useautumn.com) billing with [Convex](https://convex.dev), featuring full SSR support.
 
 ## Features
 
@@ -59,11 +59,12 @@ SvelteKit pre-loads customer data on the server, eliminating initial loading sta
 1. **Server**: `+layout.server.ts` fetches customer data via Convex HTTP client
 2. **Server**: Data is passed to client as `autumnState`
 3. **Client**: `setupAutumn()` hydrates state from server data
-4. **Client**: `$effect` syncs reactive state with server updates
+4. **Client**: The customer getter updates when refreshed server data arrives
 
 ```typescript
 // Server: +layout.server.ts
 export const load: LayoutServerLoad = async (event) => {
+  event.depends('autumn:customer');
   const customer = await getCustomer(event);
   return {
     autumnState: { customer, _timeFetched: Date.now() }
@@ -98,7 +99,7 @@ When you pass the `invalidate` function to `setupAutumn()`, all mutation methods
 </script>
 ```
 
-**Without `invalidate`:** You must manually call `refetch()` after mutations.
+**Without `invalidate`:** Both automatic refresh and `refetch()` are inactive. Pass `invalidate` to enable them, or reload the page yourself.
 
 ### Svelte 5 Reactivity with SSR
 
@@ -108,13 +109,12 @@ This library uses Svelte 5 runes designed for SSR:
 <script lang="ts">
   import { useCustomer } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
 
-  // No destructuring needed - customer is already reactive
-  const { customer } = useCustomer();
+  // Read the customer through a getter so navigation and sign-out stay reactive
+  const autumn = useCustomer();
+  const customer = $derived(autumn.customer);
 
   // Use $derived for computed values
-  const messageCount = $derived(
-    customer?.features?.messages?.balance ?? 0
-  );
+  const messageCount = $derived(customer?.features?.messages?.balance ?? 0);
 </script>
 
 <!-- No loading state - data is already available from SSR -->
@@ -130,6 +130,7 @@ This library uses Svelte 5 runes designed for SSR:
 Like the vanilla client, SvelteKit supports two ways to call Autumn operations:
 
 **1. Client Wrapper (Auto-Invalidation)**
+
 ```svelte
 <script lang="ts">
   const { track } = useCustomer();
@@ -143,6 +144,7 @@ Like the vanilla client, SvelteKit supports two ways to call Autumn operations:
 ```
 
 **2. Server-Side (Atomicity)**
+
 ```typescript
 // convex/messages.ts
 export const send = action({
@@ -172,11 +174,11 @@ See [Server-Side vs Client-Side Operations](#server-side-vs-client-side-operatio
 
 ```svelte
 <script lang="ts">
-  const { customer, allowed } = useCustomer();
+  const autumn = useCustomer();
+  const { allowed } = autumn;
+  const customer = $derived(autumn.customer);
 
-  const canUpload = $derived(
-    allowed({ featureId: 'uploads' }).allowed
-  );
+  const canUpload = $derived(allowed({ featureId: 'uploads' }).allowed);
 </script>
 
 <button disabled={!canUpload}>Upload File</button>
@@ -235,6 +237,69 @@ bun add @stickerdaniel/convex-autumn-svelte convex convex-svelte
 > **Using `@mmailaender/convex-auth-svelte` alongside this package?**
 > Both packages import the unscoped `convex-svelte`, so no alias is needed. If a duplicate Svelte instance surfaces during SSR, set `ssr.noExternal: ['@mmailaender/convex-auth-svelte']` in `vite.config.ts`.
 
+## SvelteKit 3
+
+The package supports SvelteKit `^2.21.0 || ^3.0.0`. The examples below use Kit 3
+imports. On Kit 2, keep `$lib` in place of `#lib` and `$env/static/public` in place
+of `$app/env/public`. The billing API and `invalidate('autumn:customer')` work in
+both versions.
+
+Kit 3 requires Node 22.17+, TypeScript 6, Svelte 5.57.1+, Vite 8.0.12+, and
+`@sveltejs/vite-plugin-svelte` 7. Move SvelteKit options into `vite.config.ts`:
+
+```typescript
+import adapter from '@sveltejs/adapter-node';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [sveltekit({ adapter: adapter() })]
+});
+```
+
+Use adapter-node 6 and remove the old `svelte.config.js`. Declare the standard
+subpath import in your app's `package.json`; include file extensions in imports:
+
+```json
+{ "imports": { "#lib/*": "./src/lib/*" } }
+```
+
+Your `tsconfig.json` extends `$app/tsconfig`, with explicit `include` and `exclude`
+arrays. Declare the deployment URL in `src/env.ts`:
+
+```typescript
+import { defineEnvVars } from '@sveltejs/kit/env';
+
+export const variables = defineEnvVars({
+  PUBLIC_CONVEX_URL: { public: true, static: true }
+});
+```
+
+Set `PUBLIC_CONVEX_URL` in your environment. Keep `AUTUMN_SECRET_KEY` in your
+Convex deployment; it is never a public SvelteKit variable. The demo also uses
+explicit environment declarations for its test flags, which default to disabled.
+
+Import `createAutumnHandlers` only in server code. The published server entry
+imports `$app/server`, allowing both Kit versions to reject accidental browser
+imports even after installation from npm.
+
+The Convex Auth example uses `@mmailaender/convex-auth-svelte@0.1.3`, whose own
+published peer range still targets Kit 2. It is a demo dependency, not a dependency
+of this wrapper. Configure its server hooks as shown in
+[the demo](../../hooks.server.ts), and verify your provider's Kit 3 support.
+You can use another auth provider through `createClient` without changing billing code.
+
+Remote functions and async Svelte remain experimental in Kit 3. This package
+continues to use Convex operations and server `load` functions. An app that opts
+into remote functions can pass `getRequestEvent()` to these server helpers;
+authorization must still happen for each request. Service workers, shallow routing,
+and OpenTelemetry are optional app features and require no wrapper changes.
+
+For reverse proxies, Kit 3 uses `paths.origin` in the Vite plugin instead of
+adapter-node's former `ORIGIN` environment variable. See the
+[official migration guide](https://svelte.dev/docs/kit/migrating-to-sveltekit-3)
+for navigation, form, cookie, and error-handling changes.
+
 ## Setup
 
 ### 1. Configure Autumn in Convex (same as vanilla Svelte)
@@ -280,10 +345,10 @@ Create a layout server load function to fetch customer data. Autumn delegates au
 ```typescript
 // src/routes/+layout.server.ts
 import type { LayoutServerLoad } from './$types';
-import { createConvexAuthHandlers } from '@stickerdaniel/convex-autumn-svelte/sveltekit/server';
+import { createConvexAuthHandlers } from '@mmailaender/convex-auth-svelte/sveltekit/server';
 import { createAutumnHandlers } from '@stickerdaniel/convex-autumn-svelte/sveltekit/server';
-import { api } from '$lib/convex/_generated/api';
-import { PUBLIC_CONVEX_URL } from '$env/static/public';
+import { api } from '#lib/convex/_generated/api.js';
+import { PUBLIC_CONVEX_URL } from '$app/env/public';
 
 // Create Convex Auth handlers
 const authHandlers = createConvexAuthHandlers({
@@ -297,9 +362,11 @@ const { getCustomer } = createAutumnHandlers({
 });
 
 export const load: LayoutServerLoad = async (event) => {
-  const customer = await getCustomer(event);
+  event.depends('autumn:customer');
+  const customer = (await authHandlers.isAuthenticated(event)) ? await getCustomer(event) : null;
 
   return {
+    authState: await authHandlers.getAuthState(event),
     autumnState: {
       customer,
       _timeFetched: Date.now()
@@ -318,16 +385,18 @@ Initialize Autumn in your layout component with server state and pass the `inval
 <!-- src/routes/+layout.svelte -->
 <script lang="ts">
   import { setupConvex } from 'convex-svelte';
+  import { setupConvexAuth } from '@mmailaender/convex-auth-svelte/sveltekit';
   import { setupAutumn } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
   import { invalidate } from '$app/navigation';
-  import { api } from '$lib/convex/_generated/api';
-  import { PUBLIC_CONVEX_URL } from '$env/static/public';
-  import type { LayoutData } from './$types';
+  import { api } from '#lib/convex/_generated/api.js';
+  import { PUBLIC_CONVEX_URL } from '$app/env/public';
+  import type { LayoutProps } from './$types';
 
-  let { data, children }: { data: LayoutData; children: any } = $props();
+  let { data, children }: LayoutProps = $props();
 
   // Setup Convex client
   setupConvex(PUBLIC_CONVEX_URL);
+  setupConvexAuth({ getServerState: () => data.authState });
 
   // Setup Autumn with SSR support and auto-invalidation
   setupAutumn({
@@ -340,7 +409,7 @@ Initialize Autumn in your layout component with server state and pass the `inval
 {@render children()}
 ```
 
-> **Note:** Passing the `invalidate` function enables automatic data refetching after mutations. If you don't pass it, mutations will still work but won't automatically refresh customer data. You'll need to manually call `refetch()` or reload the page to see updated data.
+> **Note:** Passing the `invalidate` function enables automatic data refetching after mutations. If you don't pass it, mutations will still work but won't automatically refresh customer data. `refetch()` also needs that function; otherwise reload the page to see updated data.
 
 ## Usage
 
@@ -352,7 +421,8 @@ With SSR, your data is available immediately:
 <script lang="ts">
   import { useCustomer } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
 
-  const { customer } = useCustomer();
+  const autumn = useCustomer();
+  const customer = $derived(autumn.customer);
 </script>
 
 <!-- No loading spinner! -->
@@ -368,28 +438,26 @@ With SSR, your data is available immediately:
 <script lang="ts">
   import { useCustomer } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
 
-  const { customer, allowed, check } = useCustomer();
+  const autumn = useCustomer();
+  const { allowed, check } = autumn;
+  const customer = $derived(autumn.customer);
 
   // Check locally (instant, no server call)
-  const canUpload = $derived(
-    allowed({ featureId: 'uploads' }).allowed
-  );
+  const canUpload = $derived(allowed({ featureId: 'uploads' }).allowed);
 
   async function handleUpload(file: File) {
     // Check on server (tracks usage)
     const result = await check({ featureId: 'uploads' });
 
     if (result.allowed) {
-      // Data will automatically refresh via invalidateAll()
+      // Data will automatically refresh via invalidate('autumn:customer')
       await uploadFile(file);
     }
   }
 </script>
 
 {#if canUpload}
-  <button onclick={() => handleUpload(selectedFile)}>
-    Upload File
-  </button>
+  <button onclick={() => handleUpload(selectedFile)}> Upload File </button>
 {:else}
   <p>Upgrade to upload more files</p>
 {/if}
@@ -401,7 +469,9 @@ With SSR, your data is available immediately:
 <script lang="ts">
   import { useCustomer } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
 
-  const { customer, checkout, attach } = useCustomer();
+  const autumn = useCustomer();
+  const { checkout, attach } = autumn;
+  const customer = $derived(autumn.customer);
 
   async function upgradeToPro() {
     const result = await checkout({
@@ -409,7 +479,7 @@ With SSR, your data is available immediately:
       successUrl: '/dashboard?upgraded=true'
     });
 
-    // Data will automatically refresh via invalidateAll()
+    // Data will automatically refresh via invalidate('autumn:customer')
 
     if (result.url) {
       // Autumn wants the customer on a hosted Stripe page.
@@ -436,15 +506,11 @@ With SSR, your data is available immediately:
     }
   }
 
-  const isPro = $derived(
-    customer?.products?.some(p => p.id === 'pro') ?? false
-  );
+  const isPro = $derived(customer?.products?.some((p) => p.id === 'pro') ?? false);
 </script>
 
 {#if !isPro}
-  <button onclick={upgradeToPro}>
-    Upgrade to Pro - $50/month
-  </button>
+  <button onclick={upgradeToPro}> Upgrade to Pro - $50/month </button>
 {:else}
   <p>You're on the Pro plan!</p>
 {/if}
@@ -478,6 +544,7 @@ The client wrapper methods (`track()`, `check()`, `checkout()`, etc.) provide au
 ```
 
 **Characteristics:**
+
 - Automatic SvelteKit invalidation via `invalidate('autumn:customer')`
 - Server load function re-runs, fresh data hydrates to client
 - Simple API - no context needed
@@ -523,7 +590,7 @@ export const send = action({
 <script lang="ts">
   import { useConvexClient } from 'convex-svelte';
   import { useCustomer } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
-  import { api } from '$lib/convex/_generated/api';
+  import { api } from '#lib/convex/_generated/api.js';
 
   const client = useConvexClient();
   const { refetch } = useCustomer();
@@ -539,6 +606,7 @@ export const send = action({
 ```
 
 **Characteristics:**
+
 - Atomic with database operations (check + action + track together)
 - Full transaction control - all succeed or all fail
 - Requires manual `refetch()` from client
@@ -548,11 +616,13 @@ export const send = action({
 ### SSR Considerations
 
 **Client Wrapper Pattern:**
+
 - Works client-side only (requires browser context)
 - Triggers SvelteKit invalidation automatically
 - Data flows: Client → Convex Action → Client invalidation → Server load → Client hydration
 
 **Server-Side Pattern:**
+
 - Works in both server load functions and client actions
 - No automatic invalidation (you control when data refreshes)
 - Data flows: Client/Server → Convex Action → Manual invalidation → Server load → Client hydration
@@ -609,7 +679,7 @@ export const send = action({
 <script lang="ts">
   import { useConvexClient } from 'convex-svelte';
   import { useCustomer } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
-  import { api } from '$lib/convex/_generated/api';
+  import { api } from '#lib/convex/_generated/api.js';
 
   const client = useConvexClient();
   const { refetch } = useCustomer();
@@ -639,6 +709,7 @@ export const send = action({
 **Why this pattern with SSR?**
 
 Without atomicity, race conditions could occur:
+
 - User might send a message after balance check but before tracking
 - Message could be saved but usage not tracked (billing loss)
 - Usage could be tracked but message save fails (user charged incorrectly)
@@ -678,9 +749,9 @@ Ask yourself these questions:
 Creates server-side helpers for working with Autumn in load functions.
 
 ```typescript
-import { createConvexAuthHandlers } from '@stickerdaniel/convex-autumn-svelte/sveltekit/server';
+import { createConvexAuthHandlers } from '@mmailaender/convex-auth-svelte/sveltekit/server';
 import { createAutumnHandlers } from '@stickerdaniel/convex-autumn-svelte/sveltekit/server';
-import { api } from '$lib/convex/_generated/api';
+import { api } from '#lib/convex/_generated/api.js';
 import type { PageServerLoad } from './$types';
 
 const authHandlers = createConvexAuthHandlers();
@@ -692,6 +763,7 @@ export const load: PageServerLoad = async (event) => {
   });
 
   // Get customer data
+  event.depends('autumn:customer');
   const customer = await getCustomer(event);
 
   // Get specific entity
@@ -739,9 +811,9 @@ Use server-side handlers to protect routes that require specific access:
 ```typescript
 // src/routes/dashboard/+page.server.ts
 import type { PageServerLoad } from './$types';
-import { createConvexAuthHandlers } from '@stickerdaniel/convex-autumn-svelte/sveltekit/server';
+import { createConvexAuthHandlers } from '@mmailaender/convex-auth-svelte/sveltekit/server';
 import { createAutumnHandlers } from '@stickerdaniel/convex-autumn-svelte/sveltekit/server';
-import { api } from '$lib/convex/_generated/api';
+import { api } from '#lib/convex/_generated/api.js';
 import { redirect } from '@sveltejs/kit';
 
 const authHandlers = createConvexAuthHandlers();
@@ -752,6 +824,7 @@ export const load: PageServerLoad = async (event) => {
     createClient: authHandlers.createConvexHttpClient
   });
 
+  event.depends('autumn:customer');
   const customer = await getCustomer(event);
 
   if (!customer) {
@@ -780,7 +853,9 @@ All mutation methods (`check`, `checkout`, `track`, `attach`, `cancel`, `createE
 <script lang="ts">
   import { useCustomer } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
 
-  const { customer, track } = useCustomer();
+  const autumn = useCustomer();
+  const { track } = autumn;
+  const customer = $derived(autumn.customer);
 
   async function sendMessage() {
     await track({ featureId: 'messages', value: 1 });
@@ -788,9 +863,7 @@ All mutation methods (`check`, `checkout`, `track`, `attach`, `cancel`, `createE
     // No need to manually call refetch()
   }
 
-  const messageBalance = $derived(
-    customer?.features?.messages?.balance ?? 0
-  );
+  const messageBalance = $derived(customer?.features?.messages?.balance ?? 0);
 </script>
 
 <p>Messages: {messageBalance}</p>
@@ -837,6 +910,7 @@ Read-only methods don't support this option.
 Hook to access customer data and billing operations.
 
 **Returns:**
+
 - `customer: Customer | null` - Current customer data (reactive, hydrated from SSR)
 - `allowed(params): LocalCheckResult` - Local access check (doesn't consume usage)
 - `check(params, options?): Promise<CheckResult>` - Server-side access check (auto-invalidates)
@@ -1212,10 +1286,12 @@ await refetch(); // Must call manually
 Helper function for managing loading, error, and result state for Autumn operations.
 
 **Parameters:**
+
 - `operation: (params, options?) => Promise<TResult>` - The Autumn operation to wrap (e.g., `autumn.checkout`)
 - `defaultOptions?: RefetchOptions` - Default refetch options to apply to all executions
 
 **Returns:**
+
 - `execute: (params, executeOptions?) => Promise<TResult | null>` - Execute the operation with params and optional per-execution options
 - `isLoading: boolean` - Reactive loading state (true during execution)
 - `error: Error | null` - Reactive error state (null on success, Error on failure)
@@ -1272,6 +1348,7 @@ Helper function for managing loading, error, and result state for Autumn operati
 ```
 
 **When to use:**
+
 - User-triggered operations that need loading states (checkout, track, attach, cancel)
 - Operations where you want automatic error handling
 - Batch operations with shared loading/error state
@@ -1285,11 +1362,9 @@ Use `reset()` to manually clear all state (loading, error, result) when needed, 
 ### Additional Features vs Vanilla Svelte
 
 - **SSR Hydration**: Customer data pre-loaded on the server
-- **Automatic Invalidation**: Mutations trigger `invalidateAll()`
-- **Server Helpers**: `getCustomer()`, `getEntity()`, `createConvexClient()`
+- **Automatic Invalidation**: Mutations trigger `invalidate('autumn:customer')`
+- **Server Helpers**: `getCustomer()`, `getEntity()`, `getConvexClient(event)`
 - **No Global Loading State**: Data is pre-fetched on the server (see above)
-
-</details>
 
 <details>
 <summary><h2>Migration from Vanilla Svelte</h2></summary>
@@ -1313,7 +1388,8 @@ Update your components to remove global loading/error states:
 ```diff
   <script lang="ts">
 -   const { customer, isLoading, error } = useCustomer();
-+   const { customer } = useCustomer();
++   const autumn = useCustomer();
++   const customer = $derived(autumn.customer);
   </script>
 
 - {#if isLoading}
@@ -1330,9 +1406,9 @@ Add server-side data fetching:
 
 ```typescript
 // +layout.server.ts
-import { createConvexAuthHandlers } from '@stickerdaniel/convex-autumn-svelte/sveltekit/server';
+import { createConvexAuthHandlers } from '@mmailaender/convex-auth-svelte/sveltekit/server';
 import { createAutumnHandlers } from '@stickerdaniel/convex-autumn-svelte/sveltekit/server';
-import { api } from '$lib/convex/_generated/api';
+import { api } from '#lib/convex/_generated/api.js';
 
 const authHandlers = createConvexAuthHandlers();
 
@@ -1341,6 +1417,7 @@ export const load = async (event) => {
     convexApi: api.autumn,
     createClient: authHandlers.createConvexHttpClient
   });
+  event.depends('autumn:customer');
   const customer = await getCustomer(event);
 
   return {

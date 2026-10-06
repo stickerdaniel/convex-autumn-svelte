@@ -2,9 +2,9 @@
 	import { invalidate } from "$app/navigation";
 	import { page } from "$app/state";
 
-	import AutumnHarness from "$lib/e2e/AutumnHarness.svelte";
-	import { api } from "$lib/convex/_generated/api";
-	import { setupAutumn } from "$lib/sveltekit";
+	import AutumnHarness from "#lib/e2e/AutumnHarness.svelte";
+	import { api } from "#lib/convex/_generated/api.js";
+	import { setupAutumn } from "#lib/sveltekit/index.ts";
 
 	let { data } = $props();
 

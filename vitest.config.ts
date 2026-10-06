@@ -1,11 +1,18 @@
-import { defineConfig } from 'vitest/config';
-import { sveltekit } from '@sveltejs/kit/vite';
-import tailwindcss from '@tailwindcss/vite';
+import { defineConfig, mergeConfig } from 'vitest/config';
+import viteConfig from './vite.config.js';
 
-export default defineConfig({
-	plugins: [tailwindcss(), sveltekit()] as any,
-	test: {
-		exclude: ['e2e/**', 'node_modules/**', 'dist/**', '.{idea,git,cache,output,temp}/**'],
-		passWithNoTests: true
-	}
-});
+export default mergeConfig(
+	viteConfig,
+	defineConfig({
+		test: {
+			exclude: [
+				'e2e/**',
+				'node_modules/**',
+				'dist/**',
+				'scratch/**',
+				'.{idea,git,cache,output,temp}/**'
+			],
+			passWithNoTests: true
+		}
+	})
+);

@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
 
-import { signInAsPrimary, signInAsSecondary, signOut } from "./helpers/auth";
+import { signInAsPrimary, signOut } from "./helpers/auth";
+import { attachPro } from "./helpers/billing";
 import {
 	openHarness,
 	readJson,
 	resetPrimaryUser,
 	resetSecondaryUser,
+	waitForOperation,
 } from "./helpers/fixtures";
 
 test.describe.configure({ mode: "serial" });
@@ -26,18 +28,10 @@ test.describe("sveltekit wrapper harness", () => {
 
 	test("attach and cancel toggle the product state and invalidate", async ({ page }) => {
 		await openHarness(page, "/__e2e/sveltekit");
-
-		await page.getByTestId("run-attach").click();
-		await expect
-			.poll(async () => (await readJson(page, "customer-current"))?.products ?? [])
-			.toContain("pro");
-
-		const invalidationsAfterAttach = Number(
-			await page.getByTestId("invalidate-count").textContent(),
-		);
-		expect(invalidationsAfterAttach).toBeGreaterThan(0);
+		await attachPro(page);
 
 		await page.getByTestId("run-cancel").click();
+		await waitForOperation(page, "cancel");
 		await expect
 			.poll(async () => (await readJson(page, "customer-current"))?.products ?? [])
 			.not.toContain("pro");
@@ -55,16 +49,17 @@ test.describe("sveltekit wrapper harness", () => {
 			.toBe(true);
 
 		await page.getByTestId("run-getEntity").click();
-
-		const entity = await readJson(page, "result-getEntity");
+		const entity = await waitForOperation(page, "getEntity");
 		expect(entity.id).toBeTruthy();
 		expect(entity.id).toContain("e2e-");
 	});
 
 	test("referral code flows across primary and secondary users", async ({ page }) => {
 		await openHarness(page, "/__e2e/sveltekit");
+		const referrerId = (await readJson(page, "customer-current")).id;
 
 		await page.getByTestId("run-createReferralCode").click();
+		await waitForOperation(page, "createReferralCode");
 		await expect
 			.poll(async () => {
 				const value = await readJson(page, "created-referral-code");
@@ -74,12 +69,22 @@ test.describe("sveltekit wrapper harness", () => {
 		const referralCode = (await readJson(page, "created-referral-code")) as string;
 
 		await resetSecondaryUser(page, "/__e2e/sveltekit");
+		const redeemerId = (await readJson(page, "customer-current")).id;
 		await page.getByTestId("redeem-code-input").fill(referralCode);
 		await page.getByTestId("run-redeemReferralCode").click();
+		const redemption = await waitForOperation(page, "redeemReferralCode");
+		expect(redemption).toMatchObject({
+			id: expect.any(String),
+			customer_id: redeemerId,
+			reward_id: expect.any(String),
+			referrer: { id: referrerId },
+		});
 
-		await expect
-			.poll(async () => (await readJson(page, "result-redeemReferralCode"))?.success)
-			.toBe(true);
+		await resetSecondaryUser(page, "/__e2e/sveltekit");
+		await page.goto("/account");
+		await page.getByPlaceholder("Enter referral code", { exact: true }).fill(referralCode);
+		await page.getByRole("button", { name: "Redeem", exact: true }).click();
+		await expect(page.getByText("Referral code redeemed successfully!", { exact: true })).toBeVisible();
 
 		await signOut(page);
 		await signInAsPrimary(page);
@@ -98,10 +103,7 @@ test.describe("sveltekit wrapper harness", () => {
 			})
 			.toBe(true);
 
-		await page.getByTestId("run-attach").click();
-		await expect
-			.poll(async () => (await readJson(page, "customer-current"))?.products ?? [])
-			.toContain("pro");
+		await attachPro(page);
 
 		await page.getByTestId("run-billingPortal").click();
 		await expect
@@ -125,9 +127,8 @@ test.describe("sveltekit wrapper harness", () => {
 			.toBeTruthy();
 
 		await page.getByTestId("run-aggregateEvents").click();
-		await expect
-			.poll(async () => (await readJson(page, "result-aggregateEvents"))?.data)
-			.toBeTruthy();
+		const aggregate = await waitForOperation(page, "aggregateEvents");
+		expect(Array.isArray(aggregate.list)).toBe(true);
 
 		const after = Number(await page.getByTestId("invalidate-count").textContent());
 		expect(after).toBe(before);

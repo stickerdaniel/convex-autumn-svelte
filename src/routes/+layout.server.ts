@@ -1,7 +1,7 @@
-import { authHandlers } from '$lib/server/convex-auth';
-import { createAutumnHandlers } from '$lib/sveltekit/server';
+import { authHandlers } from '#lib/server/convex-auth.ts';
+import { createAutumnHandlers } from '#lib/sveltekit/server/index.ts';
 import type { LayoutServerLoad } from './$types';
-import { api } from '$lib/convex/_generated/api';
+import { api } from '#lib/convex/_generated/api.js';
 
 // Delegates Convex HTTP client creation to auth handlers for authenticated requests.
 const { getCustomer } = createAutumnHandlers({

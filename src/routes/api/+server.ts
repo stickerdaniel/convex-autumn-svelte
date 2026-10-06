@@ -1,6 +1,5 @@
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { authHandlers } from '$lib/server/convex-auth';
+import { authHandlers } from '#lib/server/convex-auth.ts';
 
 const { isAuthenticated: isAuthenticatedPromise } = authHandlers;
 
@@ -18,5 +17,5 @@ const { isAuthenticated: isAuthenticatedPromise } = authHandlers;
  */
 export const GET: RequestHandler = async (event) => {
 	const isAuthenticated = await isAuthenticatedPromise(event);
-	return json({ someData: isAuthenticated }, { status: isAuthenticated ? 200 : 403 });
+	return Response.json({ someData: isAuthenticated }, { status: isAuthenticated ? 200 : 403 });
 };

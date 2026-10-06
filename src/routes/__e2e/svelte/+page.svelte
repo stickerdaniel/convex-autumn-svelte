@@ -2,10 +2,11 @@
 	import { onDestroy } from "svelte";
 	import { page } from "$app/state";
 	import { useConvexClient } from "convex-svelte";
+	import { getFunctionName, type FunctionReference } from "convex/server";
 
-	import AutumnHarness from "$lib/e2e/AutumnHarness.svelte";
-	import { api } from "$lib/convex/_generated/api";
-	import { setupAutumn } from "$lib/svelte/index.svelte.js";
+	import AutumnHarness from "#lib/e2e/AutumnHarness.svelte";
+	import { api } from "#lib/convex/_generated/api.js";
+	import { setupAutumn } from "#lib/svelte/index.svelte.js";
 
 	let { data } = $props();
 
@@ -14,8 +15,8 @@
 	let fetchCount = $state(0);
 
 	const originalAction = convexClient.action.bind(convexClient);
-	convexClient.action = (async (reference: unknown, args: unknown) => {
-		if (reference === api.autumn.createCustomer) {
+	convexClient.action = (async (reference: FunctionReference<"action">, args: unknown) => {
+		if (getFunctionName(reference) === getFunctionName(api.autumn.createCustomer)) {
 			fetchCount += 1;
 		}
 

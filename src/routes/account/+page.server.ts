@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-import { api } from '$lib/convex/_generated/api.js';
+import { api } from '#lib/convex/_generated/api.js';
 import { createConvexAuthHandlers } from '@mmailaender/convex-auth-svelte/sveltekit/server';
 
 /**

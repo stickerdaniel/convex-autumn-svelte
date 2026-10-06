@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { normalizeCustomer } from "$lib/e2e/normalize";
+	import { normalizeCustomer } from "#lib/e2e/normalize.ts";
 
 	let { data } = $props();
 

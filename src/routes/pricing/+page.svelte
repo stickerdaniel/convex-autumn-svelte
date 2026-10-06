@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { useAuth } from '@mmailaender/convex-auth-svelte/sveltekit';
-	import { useCustomer } from '$lib/sveltekit';
+	import { useCustomer } from '#lib/sveltekit/index.ts';
 
 	const { isAuthenticated } = useAuth();
 	const autumn = useCustomer();

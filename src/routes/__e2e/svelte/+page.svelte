@@ -3,9 +3,9 @@
 	import { page } from "$app/state";
 	import { useConvexClient } from "convex-svelte";
 
-	import AutumnHarness from "$lib/e2e/AutumnHarness.svelte";
-	import { api } from "$lib/convex/_generated/api";
-	import { setupAutumn } from "$lib/svelte/index.svelte.js";
+	import AutumnHarness from "#lib/e2e/AutumnHarness.svelte";
+	import { api } from "#lib/convex/_generated/api.js";
+	import { setupAutumn } from "#lib/svelte/index.svelte.js";
 
 	let { data } = $props();
 

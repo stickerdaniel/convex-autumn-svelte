@@ -1,8 +1,8 @@
 import type { PageServerLoad } from "./$types";
 
-import { api } from "$lib/convex/_generated/api";
-import { authHandlers } from "$lib/server/convex-auth";
-import { createAutumnHandlers } from "$lib/sveltekit/server";
+import { api } from "#lib/convex/_generated/api.js";
+import { authHandlers } from "#lib/server/convex-auth.ts";
+import { createAutumnHandlers } from "#lib/sveltekit/server/index.ts";
 
 const autumnHandlers = createAutumnHandlers({
 	convexApi: api.autumn,

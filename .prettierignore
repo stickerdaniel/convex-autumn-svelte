@@ -3,3 +3,7 @@ package-lock.json
 yarn.lock
 bun.lock
 bun.lockb
+scratch/
+dist/
+build/
+.svelte-kit/

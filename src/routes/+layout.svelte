@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { setupConvex } from 'convex-svelte';
 	import { setupConvexAuth } from '@mmailaender/convex-auth-svelte/sveltekit';
-	import { setupAutumn } from '$lib/sveltekit';
+	import { setupAutumn } from '#lib/sveltekit/index.ts';
 	import { invalidate } from '$app/navigation';
-	import { api } from '$lib/convex/_generated/api';
-	import { PUBLIC_CONVEX_URL } from '$env/static/public';
+	import { api } from '#lib/convex/_generated/api.js';
+	import { PUBLIC_CONVEX_URL } from '$app/env/public';
 	import '../app.css';
 
 	let { children, data } = $props();

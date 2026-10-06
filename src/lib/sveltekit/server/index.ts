@@ -2,6 +2,8 @@
  * Server-side handlers for Autumn in SvelteKit.
  */
 
+import '$app/server';
+
 import type { ConvexHttpClient } from "convex/browser";
 import type { RequestEvent } from "@sveltejs/kit";
 import type { AutumnConvexApi, Customer, Entity } from "../../svelte/types.js";
@@ -55,10 +57,10 @@ export interface AutumnHandlersOptions {
  * @example
  * ```typescript
  * // +layout.server.ts - With Convex Auth
- * import { createConvexAuthHandlers } from '@stickerdaniel/convex-autumn-svelte/sveltekit/server';
- * import { createAutumnHandlers } from '@stickerdaniel/convex-autumn-svelte/autumn/sveltekit/server';
- * import { api } from '$lib/convex/_generated/api';
- * import { PUBLIC_CONVEX_URL } from '$env/static/public';
+ * import { createConvexAuthHandlers } from '@mmailaender/convex-auth-svelte/sveltekit/server';
+ * import { createAutumnHandlers } from '@stickerdaniel/convex-autumn-svelte/sveltekit/server';
+ * import { api } from '#lib/convex/_generated/api.js';
+ * import { PUBLIC_CONVEX_URL } from '$app/env/public';
  * import type { LayoutServerLoad } from './$types';
  *
  * const authHandlers = createConvexAuthHandlers({ convexUrl: PUBLIC_CONVEX_URL });
@@ -83,9 +85,9 @@ export interface AutumnHandlersOptions {
  * @example
  * ```typescript
  * // +page.server.ts - Using getEntity and custom queries
- * import { createConvexAuthHandlers } from '@stickerdaniel/convex-autumn-svelte/sveltekit/server';
- * import { createAutumnHandlers } from '@stickerdaniel/convex-autumn-svelte/autumn/sveltekit/server';
- * import { api } from '$lib/convex/_generated/api';
+ * import { createConvexAuthHandlers } from '@mmailaender/convex-auth-svelte/sveltekit/server';
+ * import { createAutumnHandlers } from '@stickerdaniel/convex-autumn-svelte/sveltekit/server';
+ * import { api } from '#lib/convex/_generated/api.js';
  * import type { PageServerLoad } from './$types';
  *
  * const authHandlers = createConvexAuthHandlers();
@@ -110,11 +112,11 @@ export interface AutumnHandlersOptions {
  * @example
  * ```typescript
  * // +layout.server.ts - With BetterAuth
- * import { auth } from '$lib/auth'; // Your BetterAuth instance
- * import { createAutumnHandlers } from '@stickerdaniel/convex-autumn-svelte/autumn/sveltekit/server';
+ * import { auth } from '#lib/auth.ts'; // Your BetterAuth instance
+ * import { createAutumnHandlers } from '@stickerdaniel/convex-autumn-svelte/sveltekit/server';
  * import { ConvexHttpClient } from 'convex/browser';
- * import { PUBLIC_CONVEX_URL } from '$env/static/public';
- * import { api } from '$lib/convex/_generated/api';
+ * import { PUBLIC_CONVEX_URL } from '$app/env/public';
+ * import { api } from '#lib/convex/_generated/api.js';
  * import type { LayoutServerLoad } from './$types';
  *
  * export const load: LayoutServerLoad = async (event) => {

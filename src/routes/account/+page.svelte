@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { useCustomer } from '$lib/sveltekit';
-	import type { Product, Entity, QueryResult, CheckResult } from '$lib/svelte/types';
-	import { isBrowser } from '$lib/svelte/utils';
+	import { useCustomer } from '#lib/sveltekit/index.ts';
+	import type { Product, Entity, QueryResult, CheckResult } from '#lib/svelte/types.ts';
+	import { isBrowser } from '#lib/svelte/utils.ts';
 
 	let { data } = $props();
 

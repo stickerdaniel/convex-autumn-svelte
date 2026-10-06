@@ -3,7 +3,7 @@
 	import { tick } from "svelte";
 	import { useConvexClient } from "convex-svelte";
 
-	import { api } from "$lib/convex/_generated/api";
+	import { api } from "#lib/convex/_generated/api.js";
 	import { normalizeCustomer } from "./normalize";
 
 	interface AutumnLike {

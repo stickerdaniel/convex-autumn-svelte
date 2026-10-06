@@ -1,6 +1,6 @@
-import { sequence } from '@sveltejs/kit/hooks';
+import { sequence, type Handle } from '@sveltejs/kit/hooks';
 import { createConvexAuthHooks, createRouteMatcher } from '@mmailaender/convex-auth-svelte/sveltekit/server';
-import { redirect, type Handle } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 
 const isSignInPage = createRouteMatcher('/signin');
 const isProtectedRoute = createRouteMatcher(['/product{/*rest}']);

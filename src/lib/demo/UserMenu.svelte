@@ -4,8 +4,8 @@
 	import { Avatar, Popover } from '@skeletonlabs/skeleton-svelte';
 
 	import { useAuth } from '@mmailaender/convex-auth-svelte/sveltekit';
-	import { useCustomer } from '$lib/sveltekit';
-	import type { Id } from '$lib/convex/_generated/dataModel.js';
+	import { useCustomer } from '#lib/sveltekit/index.ts';
+	import type { Id } from '#lib/convex/_generated/dataModel.js';
 
 	interface Props {
 		viewer: {

@@ -8,11 +8,15 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      ENABLE_E2E_HARNESS: "1"
-      PUBLIC_E2E_TEST: "1"
-      PUBLIC_CONVEX_URL: "https://placeholder.convex.cloud"
+      ENABLE_E2E_HARNESS: '1'
+      PUBLIC_E2E_TEST: '1'
+      PUBLIC_CONVEX_URL: 'https://placeholder.convex.cloud'
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -29,3 +33,12 @@ jobs:
 
       - name: Unit tests
         run: bun run test:unit
+
+      - name: Package
+        run: bun run package
+
+      - name: Production build
+        run: bun run build
+
+      - name: SvelteKit 2 and 3 consumers
+        run: node scripts/check-consumers.mjs

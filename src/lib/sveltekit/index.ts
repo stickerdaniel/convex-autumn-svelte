@@ -31,10 +31,10 @@ import type { AutumnServerState, InvalidateFunction } from "./client.svelte.js";
  * <script lang="ts">
  *   import { setupAutumn } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
  *   import { invalidate } from '$app/navigation';
- *   import { api } from '$lib/convex/_generated/api';
- *   import type { LayoutData } from './$types';
+ *   import { api } from '#lib/convex/_generated/api.js';
+ *   import type { LayoutProps } from './$types';
  *
- *   let { data }: { data: LayoutData } = $props();
+ *   let { data, children }: LayoutProps = $props();
  *
  *   // Set up Autumn with SSR support and auto-invalidation
  *   setupAutumn({
@@ -44,16 +44,22 @@ import type { AutumnServerState, InvalidateFunction } from "./client.svelte.js";
  *   });
  * </script>
  *
- * <slot />
+ * {@render children()}
  * ```
  *
  * In your +layout.server.ts:
  * ```typescript
  * import type { LayoutServerLoad } from './$types';
  * import { createAutumnHandlers } from '@stickerdaniel/convex-autumn-svelte/sveltekit/server';
+ * import { authHandlers } from '#lib/server/convex-auth.ts';
+ * import { api } from '#lib/convex/_generated/api.js';
  *
  * export const load: LayoutServerLoad = async (event) => {
- *   const { getCustomer } = createAutumnHandlers();
+ *   event.depends('autumn:customer');
+ *   const { getCustomer } = createAutumnHandlers({
+ *     convexApi: api.autumn,
+ *     createClient: authHandlers.createConvexHttpClient
+ *   });
  *   const customer = await getCustomer(event);
  *
  *   return {
@@ -89,7 +95,7 @@ export function setupAutumn({
  * Must be called after `setupAutumn()` has been called in a parent component.
  *
  * Note: Customer data is pre-loaded server-side via SSR and automatically
- * refreshed after mutations using SvelteKit's `invalidateAll()`. No global
+ * refreshed after mutations using SvelteKit's `invalidate('autumn:customer')`. No global
  * loading state is needed since data is always available on initial render.
  *
  * @returns Customer data and billing methods
@@ -111,15 +117,17 @@ export function setupAutumn({
  * @returns {function(QueryParams): Promise<QueryResult>} query - Query customer data with custom parameters
  * @returns {function(EventListParams): Promise<EventListResult>} listEvents - List raw Autumn usage events
  * @returns {function(EventAggregateParams): Promise<QueryResult>} aggregateEvents - Aggregate Autumn usage events
- * @returns {function(): Promise<void>} refetch - Manually trigger SvelteKit data refresh (invalidateAll)
+ * @returns {function(): Promise<void>} refetch - Manually trigger SvelteKit data refresh (targeted invalidation)
  *
  * @example
  * ```svelte
  * <!-- Basic usage with SSR-provided customer data -->
  * <script lang="ts">
- *   import { useCustomer } from "@stickerdaniel/convex-autumn-svelte/autumn/sveltekit";
+ *   import { useCustomer } from "@stickerdaniel/convex-autumn-svelte/sveltekit";
  *
- *   const { customer, allowed, checkout } = useCustomer();
+ *   const autumn = useCustomer();
+ *   const { allowed, checkout } = autumn;
+ *   const customer = $derived(autumn.customer);
  *
  *   // No loading state needed - customer data pre-loaded via SSR!
  *   const canUpload = $derived(allowed({ featureId: 'uploads' }).allowed);
@@ -140,12 +148,12 @@ export function setupAutumn({
  * ```svelte
  * <!-- Payment setup and referral codes with auto-refresh -->
  * <script lang="ts">
- *   import { useCustomer } from "@stickerdaniel/convex-autumn-svelte/autumn/sveltekit";
+ *   import { useCustomer } from "@stickerdaniel/convex-autumn-svelte/sveltekit";
  *
  *   const { setupPayment, createReferralCode, redeemReferralCode } = useCustomer();
  *
  *   async function addPaymentMethod() {
- *     // Automatically calls invalidateAll() after completion
+ *     // Automatically calls invalidate('autumn:customer') after completion
  *     await setupPayment({ successUrl: '/dashboard' });
  *   }
  *
@@ -172,7 +180,7 @@ export function setupAutumn({
  * ```svelte
  * <!-- Product listing and usage queries -->
  * <script lang="ts">
- *   import { useCustomer } from "@stickerdaniel/convex-autumn-svelte/autumn/sveltekit";
+ *   import { useCustomer } from "@stickerdaniel/convex-autumn-svelte/sveltekit";
  *
  *   const { listProducts, usage, query, track } = useCustomer();
  *
@@ -193,7 +201,7 @@ export function setupAutumn({
  *   }
  *
  *   async function sendMessage() {
- *     // Track automatically calls invalidateAll() to refresh customer data
+ *     // Track automatically calls invalidate('autumn:customer') to refresh customer data
  *     await track({ featureId: 'messages', value: 1 });
  *   }
  * </script>

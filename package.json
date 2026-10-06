@@ -1,7 +1,7 @@
 {
 	"name": "@stickerdaniel/convex-autumn-svelte",
 	"author": "Daniel Sticker",
-	"version": "0.4.0",
+	"version": "0.5.0",
 	"description": "Svelte 5 wrapper for Convex Autumn billing - reactive, type-safe, SSR-ready",
 	"license": "MIT",
 	"keywords": [
@@ -45,7 +45,9 @@
 		"!src/lib/**/*.spec.*"
 	],
 	"sideEffects": [
-		"**/*.css"
+		"**/*.css",
+		"./dist/sveltekit/server/index.js",
+		"./src/lib/sveltekit/server/index.ts"
 	],
 	"scripts": {
 		"dev:frontend": "vite dev",
@@ -54,16 +56,17 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
-		"package": "svelte-kit sync && svelte-package && publint",
-		"check": "svelte-kit sync && svelte-check --no-tsconfig --ignore \"src/lib/convex,dist\"",
-		"check:watch": "svelte-kit sync && svelte-check --no-tsconfig --ignore \"src/lib/convex,dist\" --watch",
+		"package": "svelte-kit sync && svelte-package -i src/lib/svelte -o dist/svelte && svelte-package -i src/lib/sveltekit -o dist/sveltekit && publint",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check .",
 		"test:e2e": "playwright test",
 		"test:e2e:smoke": "playwright test --grep @smoke",
 		"test": "bun run test:contracts && bun run test:unit",
 		"test:contracts": "tsc --noEmit -p tsconfig.contracts.json && vitest run tests/contracts",
-		"test:unit": "vitest run tests/unit"
+		"test:unit": "vitest run tests/unit",
+		"test:compat": "bun run package && node scripts/check-consumers.mjs"
 	},
 	"exports": {
 		".": {
@@ -92,10 +95,10 @@
 		"@playwright/test": "1.58.2",
 		"@skeletonlabs/skeleton": "4.13.0",
 		"@skeletonlabs/skeleton-svelte": "4.13.0",
-		"@sveltejs/adapter-node": "^5.5.4",
-		"@sveltejs/kit": "2.55.0",
-		"@sveltejs/package": "2.5.7",
-		"@sveltejs/vite-plugin-svelte": "6.2.4",
+		"@sveltejs/adapter-node": "6.0.0",
+		"@sveltejs/kit": "3.0.1",
+		"@sveltejs/package": "3.0.0",
+		"@sveltejs/vite-plugin-svelte": "7.3.1",
 		"@tailwindcss/forms": "0.5.11",
 		"@tailwindcss/typography": "0.5.19",
 		"@tailwindcss/vite": "4.2.2",
@@ -111,15 +114,16 @@
 		"prettier-plugin-svelte": "3.5.1",
 		"prettier-plugin-tailwindcss": "0.7.2",
 		"publint": "0.3.18",
-		"svelte": "5.54.0",
-		"svelte-check": "4.4.5",
+		"svelte": "5.57.1",
+		"svelte-check": "4.7.6",
 		"tailwindcss": "4.2.2",
-		"typescript": "5.9.3",
-		"vite": "7.3.1",
-		"vitest": "4.1.0"
+		"typescript": "6.0.3",
+		"vite": "8.3.2",
+		"vitest": "4.1.0",
+		"svelte-preprocess-import-assets": "1.1.0"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.21.0",
+		"@sveltejs/kit": "^2.21.0 || ^3.0.0",
 		"convex": "^1.24.3",
 		"convex-svelte": ">=0.13.0",
 		"svelte": "^5.38.5"
@@ -132,5 +136,11 @@
 		"is-network-error": "^1.3.2",
 		"jwt-decode": "^4.0.0",
 		"path-to-regexp": "^8.4.2"
+	},
+	"imports": {
+		"#lib/*": "./src/lib/*"
+	},
+	"overrides": {
+		"vite": "8.3.2"
 	}
 }

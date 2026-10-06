@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
 // Exercise the installed tarball, including public declarations and SSR, rather
@@ -186,3 +187,11 @@ export const load: PageServerLoad = async (event) => {
 }
 
 console.log(`Compatibility artifacts: ${directory}`);
+
+if (process.env.GITHUB_OUTPUT) {
+	const sha256 = createHash('sha256').update(readFileSync(tarball)).digest('hex');
+	appendFileSync(
+		process.env.GITHUB_OUTPUT,
+		`tarball=${tarball}\nsha256=${sha256}\nversion=${library.version}\n`
+	);
+}

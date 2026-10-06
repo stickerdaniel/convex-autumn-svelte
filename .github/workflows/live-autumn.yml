@@ -2,6 +2,12 @@ name: Live Autumn
 
 on:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      preview_name:
+        type: string
+        required: false
+        default: ''
   schedule:
     - cron: '0 4 * * *'
   pull_request:
@@ -55,8 +61,12 @@ jobs:
         run: bunx playwright install --with-deps chromium
 
       - name: Compute preview deployment name
+        env:
+          RELEASE_PREVIEW_NAME: ${{ inputs.preview_name }}
         run: |
-          if [ -n "${{ github.event.pull_request.number }}" ]; then
+          if [ -n "$RELEASE_PREVIEW_NAME" ]; then
+            echo "PREVIEW_NAME=$RELEASE_PREVIEW_NAME" >> "$GITHUB_ENV"
+          elif [ -n "${{ github.event.pull_request.number }}" ]; then
             echo "PREVIEW_NAME=pr-${{ github.event.pull_request.number }}" >> "$GITHUB_ENV"
           elif [ "${{ github.event_name }}" = "schedule" ]; then
             echo "PREVIEW_NAME=nightly" >> "$GITHUB_ENV"
@@ -66,6 +76,8 @@ jobs:
 
       - name: Deploy preview, seed test users, capture URL
         run: |
+          # Convex supplies PUBLIC_CONVEX_URL to this child command.
+          # shellcheck disable=SC2016
           bunx convex deploy \
             --preview-create "$PREVIEW_NAME" \
             --preview-run tests:init \

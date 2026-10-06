@@ -67,6 +67,14 @@ bun run test:compat
 See [AGENTS.md](./AGENTS.md) for project conventions and the Convex
 dashboard env vars CI relies on.
 
+To release, bump the stable version in `package.json` in a reviewed PR. After it
+merges to `main`, CI checks the package, verifies the installed tarball in both Kit
+versions, and runs live billing tests before publishing that same tarball to npm.
+Existing versions are skipped. Run CI manually on `main` to retry a release.
+
+Publishing uses npm trusted publishing for `stickerdaniel/convex-autumn-svelte`,
+workflow `ci.yml`, and GitHub environment `npm`. No npm token is stored in GitHub.
+
 ## License
 
 MIT

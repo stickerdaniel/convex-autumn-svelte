@@ -100,7 +100,7 @@ jobs:
       # This job has the publishing identity. It runs no repository code.
       - uses: actions/setup-node@v4
         with:
-          node-version: 24.18.0
+          node-version: 24.21.0
           registry-url: https://registry.npmjs.org
 
       - name: Require npm trusted publishing support

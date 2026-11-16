@@ -77,9 +77,15 @@ test.describe("vanilla svelte wrapper harness", () => {
 			.poll(async () => (await readJson(page, "after-track"))?.messages?.usage)
 			.toBeGreaterThanOrEqual(1);
 
-		await page.getByTestId("run-listEvents").click();
+		// Autumn indexes tracked events asynchronously, so each poll reruns the query.
 		await expect
-			.poll(async () => (await readJson(page, "result-listEvents"))?.total)
+			.poll(
+				async () => {
+					await page.getByTestId("run-listEvents").click();
+					return (await readJson(page, "result-listEvents"))?.total;
+				},
+				{ intervals: [1_000, 2_000, 5_000], timeout: 30_000 },
+			)
 			.toBeGreaterThanOrEqual(1);
 
 		await page.getByTestId("run-aggregateEvents").click();

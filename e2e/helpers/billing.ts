@@ -12,7 +12,8 @@ export async function attachPro(page: Page) {
 	if (result?.checkout_url) {
 		const checkoutUrl = new URL(result.checkout_url);
 		expect(checkoutUrl.origin).toBe('https://checkout.stripe.com');
-		expect(checkoutUrl.pathname).toMatch(/^\/c\/pay\/cs_test_/);
+		// Stripe changes the path prefix (/c/, /g/); the test-mode session id is the contract.
+		expect(checkoutUrl.pathname).toMatch(/\/pay\/cs_test_/);
 		await page.goto(checkoutUrl.href);
 		await expect(page.getByText('Sandbox', { exact: true })).toBeVisible();
 		await page.getByLabel('Card number', { exact: true }).fill('4242424242424242');
